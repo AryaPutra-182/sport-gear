@@ -1,17 +1,16 @@
 // app/components/Navbar.tsx
 
-"use client"; // Ubah menjadi Client Component
+"use client";
 
 import Link from 'next/link';
-import { UserIcon, ShoppingCartIcon } from '@heroicons/react/24/solid';
-import { useBookingStore } from '@/store/useBookingStore'; // Impor store
+import { ShoppingCartIcon } from '@heroicons/react/24/solid';
+import { useBookingStore } from '@/store/useBookingStore';
 import { useEffect, useState } from 'react';
+import AuthButton from './AuthButton'; // <-- 1. Impor komponen baru
 
 export default function Navbar() {
-  // Ambil items dari store
   const items = useBookingStore((state) => state.items);
 
-  // Trik untuk menghindari hydration error di Next.js
   const [isClient, setIsClient] = useState(false);
   useEffect(() => {
     setIsClient(true);
@@ -44,11 +43,9 @@ export default function Navbar() {
             )}
           </Link>
 
-          {/* Tombol Profile */}
-          <Link href="/profile" className="hidden sm:flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 text-white py-2 px-4 rounded-full transition-colors">
-            <UserIcon className="h-5 w-5" />
-            <span>Profile</span>
-          </Link>
+          {/* 2. Ganti tombol profile lama dengan komponen AuthButton */}
+          <AuthButton />
+          
         </div>
       </div>
     </nav>

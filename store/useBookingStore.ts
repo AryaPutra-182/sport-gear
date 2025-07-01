@@ -1,8 +1,5 @@
-// store/useBookingStore.ts
-
 import { create } from 'zustand';
 
-// Mendefinisikan tipe data untuk item yang akan kita simpan
 export interface BookingItem {
   id: number;
   name: string;
@@ -12,18 +9,14 @@ export interface BookingItem {
   duration: number;
 }
 
-// Mendefinisikan tipe data untuk state dan actions di store kita
 interface BookingState {
   items: BookingItem[];
   addItem: (item: BookingItem) => void;
-  // Nanti kita bisa tambahkan removeItem, clearCart, dll.
+  clearCart: () => void; 
 }
 
 export const useBookingStore = create<BookingState>((set) => ({
   items: [],
-  addItem: (item) => set((state) => {
-    // Cek jika item sudah ada, untuk sementara kita tambahkan saja
-    // Logika lebih kompleks (update jumlah) bisa ditambahkan nanti
-    return { items: [...state.items, item] };
-  }),
+  addItem: (item) => set((state) => ({ items: [...state.items, item] })),
+  clearCart: () => set({ items: [] }), 
 }));

@@ -73,9 +73,11 @@ export default function KeranjangPage() {
                 <span>Total Pembayaran</span>
                 <span>{formatCurrency(totalPembayaran)}</span>
               </div>
-              <button className="w-full mt-4 bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 rounded-lg transition-colors">
-                Lanjut ke Pembayaran
-              </button>
+              <Link href="/checkout/alamat" className="block w-full">
+    <button className="w-full mt-4 bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 rounded-lg transition-colors">
+      Lanjut ke Pembayaran
+    </button>
+  </Link>
             </div>
 
           </div>
