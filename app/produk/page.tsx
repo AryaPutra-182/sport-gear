@@ -3,7 +3,7 @@
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import ProductCard from "@/app/components/ProductCard";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient"; // Pastikan path ini sesuai dengan struktur proyek Anda
 import ProductSearch from "@/app/components/ProductSearch";
 import Link from "next/link";
 import Image from "next/image";
