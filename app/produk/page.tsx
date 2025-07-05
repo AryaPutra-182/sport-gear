@@ -1,10 +1,10 @@
 // app/produk/page.tsx
 
-import Navbar from "@/app/components/Navbar";
-import Footer from "@/app/components/Footer";
-import ProductCard from "@/app/components/ProductCard";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import ProductCard from "@/components/ProductCard";
 import { supabase } from "@/lib/supabaseClient"; // Pastikan path ini sesuai dengan struktur proyek Anda
-import ProductSearch from "@/app/components/ProductSearch";
+import ProductSearch from "@/components/ProductSearch";
 import Link from "next/link";
 import Image from "next/image";
 

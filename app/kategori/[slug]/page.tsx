@@ -1,8 +1,8 @@
 // app/kategori/[slug]/page.tsx
 
-import Navbar from "@/app/components/Navbar";
-import Footer from "@/app/components/Footer";
-import ProductCard from "@/app/components/ProductCard";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import ProductCard from "@/components/ProductCard";
 import { supabase } from "@/lib/supabaseClient";
 import { notFound } from "next/navigation";
 
