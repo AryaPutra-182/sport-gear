@@ -1,5 +1,5 @@
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import Link from 'next/link';
 import Image from 'next/image'; // Impor komponen Image dari Next.js
 import { supabase } from '@/lib/supabaseClient'; // Pastikan path ini sesuai dengan struktur proyek Anda

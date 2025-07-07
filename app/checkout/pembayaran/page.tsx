@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -18,7 +17,7 @@ const formatCurrency = (amount: number) => {
   };
 
 interface Address {
-  id: number; // Kita butuh ID alamat sekarang
+  id: number;
   recipient_name: string;
   phone_number: string;
   full_address: string;
@@ -53,7 +52,6 @@ export default function PembayaranPage() {
   const biayaOngkir = 15000;
   const totalPembayaran = totalBiayaSewa + biayaOngkir;
 
-  // --- FUNGSI BARU UNTUK MEMBUAT PESANAN ---
   const handleCreateOrder = async () => {
     setIsLoading(true);
 
@@ -70,7 +68,7 @@ export default function PembayaranPage() {
         user_id: user.id,
         address_id: latestAddress.id,
         total_price: totalPembayaran,
-        status: 'pending_payment', // Status awal
+        status: 'unpaid', // <-- PERUBAHAN DI SINI
       })
       .select()
       .single();
@@ -93,17 +91,27 @@ export default function PembayaranPage() {
 
     if (itemsError) {
       alert("Gagal menyimpan detail pesanan: " + itemsError.message);
-      // Di dunia nyata, kita perlu menghapus order yang sudah dibuat jika langkah ini gagal
       setIsLoading(false);
       return;
     }
 
-    alert("Pesanan berhasil dibuat!");
-    clearCart(); // Kosongkan keranjang
-    router.push(`/status-pesanan/${orderData.id}`); // Arahkan ke halaman status pesanan
-  };
-  // --- AKHIR FUNGSI BARU ---
+    const { error: historyError } = await supabase
+      .from('order_status_history')
+      .insert({
+        order_id: orderData.id,
+        status_text: 'Pesanan dibuat, menunggu pembayaran.',
+      });
 
+    if (historyError) {
+      console.error("Gagal membuat riwayat status awal:", historyError.message);
+    }
+
+    alert("Pesanan berhasil dibuat!");
+    clearCart();
+    router.push(`/status-pesanan/${orderData.id}`);
+  };
+
+  // ... sisa kode JSX tidak berubah ...
   if (isLoading && !latestAddress) {
     return <div className="flex justify-center items-center h-screen bg-[#0D1117] text-white">Loading...</div>;
   }
@@ -112,15 +120,12 @@ export default function PembayaranPage() {
     <div className="flex flex-col min-h-screen bg-[#0D1117]">
       <Navbar />
       <main className="flex-grow container mx-auto px-6 py-12">
-        {/* ... (kode JSX lainnya tidak berubah) ... */}
         <div className="grid lg:grid-cols-3 gap-8 items-start">
             <div className="lg:col-span-2 bg-gray-800 rounded-lg p-6 space-y-6">
                 {/* ... Detail Pengiriman & Rincian Produk ... */}
             </div>
             <div className="lg:col-span-1 bg-gray-800 rounded-lg p-6 space-y-4">
                 {/* ... Ringkasan Pesanan & Metode Pembayaran ... */}
-
-                {/* GANTI TOMBOL INI */}
                 <button 
                   onClick={handleCreateOrder}
                   disabled={isLoading || items.length === 0}
