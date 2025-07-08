@@ -5,10 +5,14 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { cookies } from "next/headers";
-import ReturnItemButton from "@/components/ReturnItemButton"; // 1. Impor komponen baru
+import ReturnItemButton from "@/components/ReturnItemButton";
 
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(amount);
 };
 
 export default async function PesananSayaPage() {
@@ -69,26 +73,37 @@ export default async function PesananSayaPage() {
                 </div>
                 
                 <div className="space-y-4">
-                  {order.order_items.map((item, index) => (
-                    <div key={index} className="flex items-center gap-4">
-                      <Image src={item.products?.image_url ?? ''} alt={item.products?.name ?? 'Produk'} width={64} height={64} className="rounded-md object-cover" />
-                      <div>
-                        <p className="font-semibold text-white">{item.products?.name}</p>
-                        <p className="text-sm text-gray-400">Jumlah: {item.quantity}</p>
+                  {/* @ts-ignore */}
+                  {order.order_items.map((item, index) => {
+                    // PERBAIKAN: Ambil produk pertama dari array
+                    const product = item.products?.[0];
+                    return (
+                      <div key={index} className="flex items-center gap-4">
+                        <Image 
+                          src={product?.image_url ?? '/images/placeholder.png'} 
+                          alt={product?.name ?? 'Produk'} 
+                          width={64} 
+                          height={64} 
+                          className="rounded-md object-cover" 
+                        />
+                        <div>
+                          <p className="font-semibold text-white">{product?.name}</p>
+                          <p className="text-sm text-gray-400">Jumlah: {item.quantity}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
 
-                {/* 2. Logika untuk menampilkan tombol aksi */}
                 <div className="mt-6 flex justify-end items-center gap-4">
                   <Link href={`/status-pesanan/${order.id}`} className="font-medium text-blue-500 hover:underline">
                       Lacak Pesanan
                   </Link>
+                  {/* @ts-ignore */}
                   {order.status === 'selesai' && (
                     <>
-                      {/* Ambil product id dari item pertama untuk link ulasan */}
-                      <Link href={`/ulasan/${order.order_items[0]?.products?.id}`} className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">
+                      {/* @ts-ignore */}
+                      <Link href={`/ulasan/${order.order_items[0]?.products?.[0]?.id}`} className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">
                         Beri Ulasan
                       </Link>
                       <ReturnItemButton orderId={order.id} />

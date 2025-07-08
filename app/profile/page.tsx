@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 
 export default async function ProfilePage() {
   const cookieStore = cookies();
-  const supabase = createSupabaseServerClient(cookieStore);
+  const supabase = createSupabaseServerClient();
 
   // 1. Dapatkan user yang sedang login
   const { data: { user } } = await supabase.auth.getUser();
