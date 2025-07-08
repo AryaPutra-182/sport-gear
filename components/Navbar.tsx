@@ -1,12 +1,10 @@
-// app/components/Navbar.tsx
-
 "use client";
 
 import Link from 'next/link';
-import { ShoppingCartIcon } from '@heroicons/react/24/solid';
+import { UserCircleIcon, ShoppingCartIcon } from '@heroicons/react/24/solid';
 import { useBookingStore } from '@/store/useBookingStore';
 import { useEffect, useState } from 'react';
-import AuthButton from './AuthButton'; // <-- 1. Impor komponen baru
+import AuthButton from './AuthButton';
 
 export default function Navbar() {
   const items = useBookingStore((state) => state.items);
@@ -15,6 +13,10 @@ export default function Navbar() {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Ganti nomor ini dengan nomor WhatsApp Anda (diawali dengan 62)
+  const whatsappNumber = '6281234567890';
+  const whatsappUrl = `https://wa.me/${whatsappNumber}`;
 
   return (
     <nav className="bg-transparent py-4">
@@ -26,9 +28,21 @@ export default function Navbar() {
 
         {/* Menu Navigasi Tengah */}
         <div className="hidden md:flex space-x-8">
-          <Link href="/" className="text-gray-300 hover:text-teal-400 transition-colors">Home</Link>
-          <Link href="/chat" className="text-gray-300 hover:text-teal-400 transition-colors">Chat</Link>
-          <Link href="/features" className="text-gray-300 hover:text-teal-400 transition-colors">Features</Link>
+          {/* PERUBAHAN DI SINI */}
+          <Link href="/produk" className="text-gray-300 hover:text-teal-400 transition-colors">Produk</Link>
+          
+          <a 
+            href={whatsappUrl} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-gray-300 hover:text-teal-400 transition-colors"
+          >
+            Chat
+          </a>
+          
+          <Link href="/pesanan_saya" className="text-gray-300 hover:text-teal-400 transition-colors">
+            Pesanan Saya
+          </Link>
         </div>
 
         {/* Tombol Aksi Kanan */}
@@ -43,9 +57,8 @@ export default function Navbar() {
             )}
           </Link>
 
-          {/* 2. Ganti tombol profile lama dengan komponen AuthButton */}
+          {/* Tombol Profile/Logout */}
           <AuthButton />
-          
         </div>
       </div>
     </nav>
