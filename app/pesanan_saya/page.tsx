@@ -15,6 +15,27 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
+// Mendefinisikan tipe data untuk membantu TypeScript
+type ProductInfo = {
+  id: number;
+  name: string;
+  image_url: string;
+};
+
+type OrderItem = {
+  quantity: number;
+  products: ProductInfo | null; // Supabase seharusnya mengembalikan objek, bukan array
+};
+
+type Order = {
+  id: number;
+  created_at: string;
+  total_price: number;
+  status: string | null;
+  order_items: OrderItem[];
+};
+
+
 export default async function PesananSayaPage() {
   const cookieStore = cookies();
   const supabase = createSupabaseServerClient();
@@ -25,7 +46,7 @@ export default async function PesananSayaPage() {
     redirect('/login?redirect_to=/pesanan_saya');
   }
 
-  const { data: orders, error } = await supabase
+  const { data, error } = await supabase
     .from('orders')
     .select(`
       id,
@@ -47,6 +68,14 @@ export default async function PesananSayaPage() {
   if (error) {
     console.error("Error fetching orders:", error);
   }
+
+  const orders: Order[] = (data || []).map((order: any) => ({
+    ...order,
+    order_items: (order.order_items || []).map((item: any) => ({
+      ...item,
+      products: Array.isArray(item.products) ? item.products[0] ?? null : item.products ?? null,
+    })),
+  }));
   
   return (
     <div className="flex flex-col min-h-screen bg-[#0D1117]">
@@ -73,21 +102,20 @@ export default async function PesananSayaPage() {
                 </div>
                 
                 <div className="space-y-4">
-                  {/* @ts-ignore */}
                   {order.order_items.map((item, index) => {
-                    // PERBAIKAN: Ambil produk pertama dari array
-                    const product = item.products?.[0];
+                    // Mengambil data produk dari item
+                    const product = item.products;
                     return (
                       <div key={index} className="flex items-center gap-4">
                         <Image 
-                          src={product?.image_url ?? '/images/placeholder.png'} 
-                          alt={product?.name ?? 'Produk'} 
+                          src={product?.image_url || `https://placehold.co/64x64/2d3748/e2e8f0?text=No+Img`}
+                          alt={product?.name ?? 'Gambar Produk'} 
                           width={64} 
                           height={64} 
-                          className="rounded-md object-cover" 
+                          className="rounded-md object-cover bg-gray-700" 
                         />
                         <div>
-                          <p className="font-semibold text-white">{product?.name}</p>
+                          <p className="font-semibold text-white">{product?.name ?? 'Produk Dihapus'}</p>
                           <p className="text-sm text-gray-400">Jumlah: {item.quantity}</p>
                         </div>
                       </div>
@@ -99,11 +127,10 @@ export default async function PesananSayaPage() {
                   <Link href={`/status-pesanan/${order.id}`} className="font-medium text-blue-500 hover:underline">
                       Lacak Pesanan
                   </Link>
-                  {/* @ts-ignore */}
                   {order.status === 'selesai' && (
                     <>
                       {/* @ts-ignore */}
-                      <Link href={`/ulasan/${order.order_items[0]?.products?.[0]?.id}`} className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">
+                      <Link href={`/ulasan/${order.order_items[0]?.products?.id}`} className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">
                         Beri Ulasan
                       </Link>
                       <ReturnItemButton orderId={order.id} />

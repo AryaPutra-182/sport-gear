@@ -1,11 +1,13 @@
+// app/admin/dashboard/page.tsx
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import Link from "next/link"; // Pastikan Link diimpor
+import Link from "next/link";
 
-// Fungsi untuk memeriksa peran admin
+// Fungsi keamanan untuk memeriksa peran admin
 async function checkAdminRole() {
   const cookieStore = cookies();
   const supabase = createSupabaseServerClient();
@@ -52,20 +54,20 @@ export default async function AdminDashboardPage() {
             {/* Kartu untuk Manajemen Produk */}
             <Link href="/admin/produk" className="block p-6 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
               <h3 className="text-xl font-semibold text-white">Manajemen Produk</h3>
-              <p className="mt-2 text-gray-400">Tambah, edit, atau hapus produk yang disewakan.</p>
+              <p className="mt-2 text-gray-400">Tambah, edit, atau hapus produk.</p>
             </Link>
 
-            {/* KARTU MANAJEMEN PESANAN YANG DIPERBARUI */}
+            {/* Kartu Manajemen Pesanan */}
             <Link href="/admin/pesanan" className="block p-6 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
               <h3 className="text-xl font-semibold text-white">Manajemen Pesanan</h3>
-              <p className="mt-2 text-gray-400">Lihat semua pesanan yang masuk dan perbarui statusnya.</p>
+              <p className="mt-2 text-gray-400">Lihat pesanan dan perbarui status.</p>
             </Link>
 
-            {/* Placeholder untuk menu admin lainnya */}
-            <div className="block p-6 bg-gray-900 border border-dashed border-gray-700 rounded-lg cursor-not-allowed">
-              <h3 className="text-xl font-semibold text-gray-500">Manajemen Pengguna</h3>
-              <p className="mt-2 text-gray-600">(Segera Hadir)</p>
-            </div>
+            {/* PERUBAHAN DI SINI: Kartu Manajemen Kategori */}
+            <Link href="/admin/kategori" className="block p-6 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+              <h3 className="text-xl font-semibold text-white">Manajemen Kategori</h3>
+              <p className="mt-2 text-gray-400">Tambah atau lihat kategori produk.</p>
+            </Link>
           </div>
         </div>
       </main>

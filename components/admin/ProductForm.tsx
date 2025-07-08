@@ -1,9 +1,9 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+import Image from 'next/image'; // Impor komponen Image
 
 // Mendefinisikan tipe data untuk props
 type Category = {
@@ -20,6 +20,7 @@ type Product = {
   image_url: string;
 };
 
+// Komponen sekarang menerima initialData opsional
 export default function ProductForm({ categories, initialData }: { categories: Category[], initialData?: Product }) {
   const router = useRouter();
   const [name, setName] = useState('');
@@ -27,14 +28,17 @@ export default function ProductForm({ categories, initialData }: { categories: C
   const [price, setPrice] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null); // State untuk menyimpan URL gambar saat ini
   const [isLoading, setIsLoading] = useState(false);
 
+  // useEffect untuk mengisi form jika ini adalah mode edit
   useEffect(() => {
     if (initialData) {
       setName(initialData.name);
       setDescription(initialData.description || '');
       setPrice(String(initialData.price_per_day));
       setCategoryId(String(initialData.category_id));
+      setCurrentImageUrl(initialData.image_url); // Simpan URL gambar yang ada
     }
   }, [initialData]);
 
@@ -46,6 +50,7 @@ export default function ProductForm({ categories, initialData }: { categories: C
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // ... (Logika submit tidak berubah) ...
     if (!name || !price || !categoryId) {
       alert('Mohon isi nama, harga, dan kategori.');
       return;
@@ -59,20 +64,16 @@ export default function ProductForm({ categories, initialData }: { categories: C
     try {
       let imageUrl = initialData?.image_url;
 
-   
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `public/${fileName}`;
+        const filePath = fileName;
 
         const { error: uploadError } = await supabase.storage
           .from('product-images')
           .upload(filePath, imageFile);
 
-        if (uploadError) {
-          // Memberikan pesan error yang lebih spesifik jika upload gagal
-          throw new Error(`Gagal upload gambar: ${uploadError.message}`);
-        }
+        if (uploadError) throw uploadError;
 
         const { data: urlData } = supabase.storage
           .from('product-images')
@@ -81,7 +82,6 @@ export default function ProductForm({ categories, initialData }: { categories: C
         imageUrl = urlData.publicUrl;
       }
       
-      // Memastikan imageUrl tidak kosong sebelum melanjutkan
       if (!imageUrl) {
         throw new Error("URL gambar tidak valid. Proses dibatalkan.");
       }
@@ -94,17 +94,11 @@ export default function ProductForm({ categories, initialData }: { categories: C
         image_url: imageUrl,
       };
 
-      // 2. Bedakan antara INSERT (buat baru) dan UPDATE (edit)
       if (initialData) {
-        // Mode Edit
-        const { error } = await supabase
-          .from('products')
-          .update(productData)
-          .eq('id', initialData.id);
+        const { error } = await supabase.from('products').update(productData).eq('id', initialData.id);
         if (error) throw error;
         alert('Produk berhasil diperbarui!');
       } else {
-        // Mode Tambah Baru
         const { error } = await supabase.from('products').insert(productData);
         if (error) throw error;
         alert('Produk berhasil ditambahkan!');
@@ -113,7 +107,6 @@ export default function ProductForm({ categories, initialData }: { categories: C
       router.push('/admin/produk');
       router.refresh();
     } catch (error: any) {
-      console.error("Terjadi kesalahan pada handleSubmit:", error);
       alert('Gagal memproses produk: ' + error.message);
     } finally {
       setIsLoading(false);
@@ -122,6 +115,7 @@ export default function ProductForm({ categories, initialData }: { categories: C
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* ... Form input untuk nama, deskripsi, harga, kategori ... */}
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">Nama Produk</label>
         <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} required className="w-full bg-gray-700 text-white rounded-md border-gray-600 focus:ring-teal-500 focus:border-teal-500" />
@@ -143,11 +137,29 @@ export default function ProductForm({ categories, initialData }: { categories: C
           ))}
         </select>
       </div>
+      
+      {/* PERUBAHAN DI SINI */}
       <div>
         <label htmlFor="image" className="block text-sm font-medium text-gray-300 mb-2">Gambar Produk</label>
+        
+        {/* Tampilkan gambar yang ada saat ini jika dalam mode edit */}
+        {initialData && currentImageUrl && (
+          <div className="mb-4">
+            <p className="text-sm text-gray-400 mb-2">Gambar Saat Ini:</p>
+            <Image 
+              src={currentImageUrl} 
+              alt={initialData.name} 
+              width={150} 
+              height={150} 
+              className="rounded-md object-cover"
+            />
+          </div>
+        )}
+
         <input type="file" id="image" onChange={handleImageChange} accept="image/*" className="w-full text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" />
-        {initialData && <p className="text-xs text-gray-400 mt-1">Kosongkan jika tidak ingin mengubah gambar.</p>}
+        {initialData && <p className="text-xs text-gray-400 mt-1">Pilih file baru jika ingin mengubah gambar.</p>}
       </div>
+      
       <button type="submit" disabled={isLoading} className="w-full mt-4 bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 rounded-lg transition-colors disabled:bg-gray-500">
         {isLoading ? 'Menyimpan...' : 'Simpan Produk'}
       </button>

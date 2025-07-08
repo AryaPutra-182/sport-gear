@@ -8,9 +8,10 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
-         {
+      // PERBAIKAN FINAL: Satu pola yang lebih umum untuk semua bucket publik
+      {
         protocol: 'https',
-            hostname: 'jcqdaszxzmxzyqnjyhmz.supabase.co', 
+        hostname: 'jcqdaszxzmxzyqnjyhmz.supabase.co', // Pastikan ini hostname Anda
         port: '',
         pathname: '/storage/v1/object/public/**',
       },

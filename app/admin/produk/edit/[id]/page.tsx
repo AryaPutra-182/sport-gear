@@ -1,3 +1,5 @@
+// app/admin/produk/edit/[id]/page.tsx
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductForm from "@/components/admin/ProductForm";
@@ -8,14 +10,20 @@ import { notFound } from "next/navigation";
 // Fungsi untuk mengambil data kategori
 async function getCategories(supabase: any) {
   const { data, error } = await supabase.from('categories').select('id, name');
-  if (error) return [];
+  if (error) {
+    console.error("Error fetching categories:", error);
+    return [];
+  }
   return data;
 }
 
 // Fungsi untuk mengambil data produk spesifik
 async function getProduct(supabase: any, id: string) {
   const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
-  if (error) notFound();
+  if (error) {
+    // Jika produk tidak ditemukan, arahkan ke halaman 404
+    notFound();
+  }
   return data;
 }
 
@@ -23,7 +31,7 @@ export default async function EditProdukPage({ params }: { params: { id: string 
   const cookieStore = cookies();
   const supabase = createSupabaseServerClient();
   
-  // Ambil data produk dan kategori secara bersamaan
+  // Ambil data produk dan kategori secara bersamaan untuk efisiensi
   const [product, categories] = await Promise.all([
     getProduct(supabase, params.id),
     getCategories(supabase)
