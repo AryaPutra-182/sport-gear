@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import UpdateStatusForm from "@/components/admin/updateStatusForm";
+import UpdateStatusForm from "@/components/admin/UpdateStatusForm";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
