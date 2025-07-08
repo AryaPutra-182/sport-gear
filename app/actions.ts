@@ -7,43 +7,85 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
 // --- FUNGSI PRODUK ---
+
 export async function deleteProduct(productId: number, imageUrl: string) {
   const cookieStore = cookies();
   const supabase = createSupabaseServerClient();
-  const fileName = imageUrl.split('/').pop();
-  if (fileName) {
-    await supabase.storage.from('product-images').remove([fileName]);
+
+  try {
+    // 1. Hapus gambar dari Supabase Storage
+    const fileName = imageUrl.split('/').pop();
+    if (fileName) {
+      const { error: storageError } = await supabase.storage
+        .from('product-images')
+        .remove([fileName]);
+      
+      if (storageError) throw storageError;
+    }
+
+    // 2. Hapus data produk dari tabel 'products'
+    const { error: dbError } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', productId);
+
+    if (dbError) throw dbError;
+
+    // 3. Revalidasi path untuk me-refresh data
+    revalidatePath('/admin/produk');
+
+    // Jika berhasil, kembalikan success: true dan error: null
+    return { success: true, error: null };
+  } catch (error: any) {
+    // Jika ada error di mana pun, kembalikan success: false dan pesan errornya
+    console.error("Error deleting product:", error);
+    return { success: false, error: error.message };
   }
-  await supabase.from('products').delete().eq('id', productId);
-  revalidatePath('/admin/produk');
-  return { success: true };
 }
 
+
 // --- FUNGSI PESANAN ---
+
 export async function updateOrderStatus(orderId: number, newStatus: string) {
   const cookieStore = cookies();
   const supabase = createSupabaseServerClient();
-  await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+
+  const { error: orderError } = await supabase
+    .from('orders')
+    .update({ status: newStatus })
+    .eq('id', orderId);
+
+  if (orderError) {
+    return { success: false, error: orderError.message };
+  }
+
   const statusText = `Status pesanan diubah menjadi: ${newStatus.replace('_', ' ')}`;
   await supabase.from('order_status_history').insert({ order_id: orderId, status_text: statusText });
+  
   revalidatePath(`/admin/pesanan/${orderId}`);
   revalidatePath('/admin/pesanan');
   revalidatePath(`/status-pesanan/${orderId}`);
   revalidatePath('/pesanan_saya');
+
   return { success: true, error: null };
 }
 
 export async function requestItemReturn(orderId: number) {
   const cookieStore = cookies();
   const supabase = createSupabaseServerClient();
+
   const newStatus = 'proses_pengembalian';
   const statusText = 'Permintaan pengembalian barang telah dibuat. Kurir akan segera menjemput.';
+
   await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
   await supabase.from('order_status_history').insert({ order_id: orderId, status_text: statusText });
+
   revalidatePath(`/pesanan_saya`);
   revalidatePath(`/status-pesanan/${orderId}`);
+
   return { success: true, error: null };
 }
+
 
 // --- FUNGSI KATEGORI ---
 
@@ -52,17 +94,23 @@ export async function addCategory(formData: FormData) {
   const supabase = createSupabaseServerClient();
   const name = formData.get('name') as string;
   const imageFile = formData.get('image') as File;
+
   if (!name || !imageFile || imageFile.size === 0) {
     return { error: 'Nama dan gambar kategori wajib diisi.' };
   }
+
   try {
     const fileExt = imageFile.name.split('.').pop();
     const fileName = `category-${Date.now()}.${fileExt}`;
+    
     await supabase.storage.from('product-images').upload(fileName, imageFile);
     const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(fileName);
+    
     await supabase.from('categories').insert({ name, image_url: urlData.publicUrl });
+
     revalidatePath('/admin/kategori');
     revalidatePath('/produk');
+    return { success: true };
   } catch (error: any) {
     return { error: error.message };
   }
