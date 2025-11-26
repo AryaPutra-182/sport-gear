@@ -4,138 +4,242 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useBookingStore } from "@/store/useBookingStore";
-import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import { getLatestAddress, createOrder } from "@/lib/api";
+import Link from "next/link";
+import Image from "next/image";
 
-// ... (fungsi formatCurrency biarkan sama)
-const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
-interface Address {
-  id: number;
-  recipient_name: string;
-  phone_number: string;
-  full_address: string;
-  notes?: string;
-}
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(amount);
 
 export default function PembayaranPage() {
-  const { items, clearCart } = useBookingStore();
-  const [latestAddress, setLatestAddress] = useState<Address | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const { items, clearCart } = useBookingStore();
 
-  useEffect(() => {
-    const fetchLatestAddress = async () => {
-      const { data, error } = await supabase
-        .from('addresses')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-      
-      if (data) {
-        setLatestAddress(data);
-      }
-      setIsLoading(false);
-    };
-    fetchLatestAddress();
-  }, []);
+  const [latestAddress, setLatestAddress] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
-  const totalBiayaSewa = items.reduce((total, item) => 
-    total + (item.price_per_day * item.quantity * item.duration), 0);
+  // Hitung Total (Dengan Safety Check)
+  const totalBiayaSewa = items.reduce((total, item) => {
+    const price = item.price || (item as any).price_per_day || 0;
+    const duration = item.duration || 1;
+    const quantity = item.quantity || 1;
+    return total + (price * duration * quantity);
+  }, 0);
+
   const biayaOngkir = 15000;
   const totalPembayaran = totalBiayaSewa + biayaOngkir;
 
+  useEffect(() => {
+    setIsMounted(true);
+
+    async function fetchAddress() {
+      try {
+        const res = await getLatestAddress();
+        console.log("📦 Response API Address:", res);
+
+        if (res?.status === 401 || res?.error === "Unauthorized") {
+          router.push("/login?redirect_to=/checkout/pembayaran");
+          return;
+        }
+
+        // Normalisasi data (Object atau Array)
+        let addressData = res?.data || res;
+        if (Array.isArray(addressData)) {
+            addressData = addressData.length > 0 ? addressData[0] : null;
+        }
+
+        if (addressData && addressData.id) {
+          setLatestAddress(addressData);
+        } else {
+          setLatestAddress(null);
+        }
+
+      } catch (error) {
+        console.error("❌ Gagal mengambil alamat:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchAddress();
+  }, [router]);
+
   const handleCreateOrder = async () => {
-    setIsLoading(true);
+    if (!latestAddress) return;
+    setLoading(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user || !latestAddress) {
-      alert("Anda harus login dan memiliki alamat untuk memesan.");
-      setIsLoading(false);
-      return;
+    try {
+      // ✅ FIX PAYLOAD: Gunakan camelCase agar sesuai dengan Prisma Backend
+      const payload = {
+        addressId: latestAddress.id, // address_id -> addressId
+        items: items.map((item) => ({
+          productId: item.id,        // product_id -> productId
+          quantity: item.quantity,
+          duration: item.duration,
+        })),
+        totalPrice: totalPembayaran, // total_price -> totalPrice
+      };
+
+      console.log("📤 Sending Payload:", payload);
+
+      const res = await createOrder(payload);
+
+      if (res.error) {
+        alert("Gagal membuat pesanan: " + res.error);
+        setLoading(false);
+        return; 
+      }
+
+      // Sukses
+      clearCart();
+      router.push(`/status-pesanan/${res.data?.id || res.id}`);
+
+    } catch (error) {
+      console.error("❌ Error create order:", error);
+      alert("Terjadi kesalahan sistem.");
+      setLoading(false);
     }
-
-    const { data: orderData, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        user_id: user.id,
-        address_id: latestAddress.id,
-        total_price: totalPembayaran,
-        status: 'unpaid', // <-- PERUBAHAN DI SINI
-      })
-      .select()
-      .single();
-
-    if (orderError) {
-      alert("Gagal membuat pesanan: " + orderError.message);
-      setIsLoading(false);
-      return;
-    }
-
-    const orderItems = items.map(item => ({
-      order_id: orderData.id,
-      product_id: item.id,
-      quantity: item.quantity,
-      duration: item.duration,
-      price_at_order: item.price_per_day,
-    }));
-
-    const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
-
-    if (itemsError) {
-      alert("Gagal menyimpan detail pesanan: " + itemsError.message);
-      setIsLoading(false);
-      return;
-    }
-
-    const { error: historyError } = await supabase
-      .from('order_status_history')
-      .insert({
-        order_id: orderData.id,
-        status_text: 'Pesanan dibuat, menunggu pembayaran.',
-      });
-
-    if (historyError) {
-      console.error("Gagal membuat riwayat status awal:", historyError.message);
-    }
-
-    alert("Pesanan berhasil dibuat!");
-    clearCart();
-    router.push(`/status-pesanan/${orderData.id}`);
   };
 
-  // ... sisa kode JSX tidak berubah ...
-  if (isLoading && !latestAddress) {
-    return <div className="flex justify-center items-center h-screen bg-[#0D1117] text-white">Loading...</div>;
+  if (!isMounted) return null;
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen text-white bg-[#0D1117]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mr-3"></div>
+        Memuat data...
+      </div>
+    );
   }
-  
+
   return (
     <div className="flex flex-col min-h-screen bg-[#0D1117]">
       <Navbar />
-      <main className="flex-grow container mx-auto px-6 py-12">
+
+      <main className="container mx-auto flex-grow px-6 py-12">
+        <h1 className="text-3xl font-bold text-white mb-8">Checkout & Pembayaran</h1>
+
         <div className="grid lg:grid-cols-3 gap-8 items-start">
-            <div className="lg:col-span-2 bg-gray-800 rounded-lg p-6 space-y-6">
-                {/* ... Detail Pengiriman & Rincian Produk ... */}
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* KARTU ALAMAT */}
+            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-white text-xl font-bold">Alamat Pengiriman</h2>
+                <Link href="/checkout/alamat" className="text-teal-400 text-sm hover:underline">
+                  {latestAddress ? "Ubah Alamat" : "Tambah Alamat"}
+                </Link>
+              </div>
+
+              {latestAddress ? (
+                <div className="text-gray-300 space-y-1">
+                  <p className="font-bold text-white">
+                    {/* Support snake_case atau camelCase */}
+                    {latestAddress.recipientName || latestAddress.recipient_name}
+                    <span className="text-gray-500 ml-2 font-normal"> 
+                        | {latestAddress.phoneNumber || latestAddress.phone_number}
+                    </span>
+                  </p>
+                  <p>{latestAddress.fullAddress || latestAddress.full_address}</p>
+                  
+                  {latestAddress.notes && (
+                    <p className="text-sm italic text-gray-500">"Catatan: {latestAddress.notes}"</p>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-6 bg-gray-900/50 rounded-md border border-dashed border-gray-600">
+                  <p className="text-yellow-400 mb-3">⚠️ Anda belum mengatur alamat pengiriman</p>
+                  <Link href="/checkout/alamat" className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded">
+                    Tambah Alamat Baru
+                  </Link>
+                </div>
+              )}
             </div>
-            <div className="lg:col-span-1 bg-gray-800 rounded-lg p-6 space-y-4">
-                {/* ... Ringkasan Pesanan & Metode Pembayaran ... */}
-                <button 
-                  onClick={handleCreateOrder}
-                  disabled={isLoading || items.length === 0}
-                  className="w-full mt-4 bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 rounded-lg transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? 'Memproses...' : 'Pay Now'}
-                </button>
+
+            {/* DETAIL BARANG */}
+            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
+              <h2 className="text-white text-xl font-bold mb-4">Detail Barang</h2>
+
+              {items.map((item) => {
+                // ✅ FIX: Gunakan casting (as any) untuk menghindari error TypeScript
+                const itemPrice = item.price || (item as any).price_per_day || 0;
+                
+                return (
+                  <div key={item.id} className="flex items-center gap-4 border-b border-gray-700 pb-4 last:border-none">
+                    <div className="relative w-16 h-16 bg-gray-700 rounded-md overflow-hidden flex-shrink-0">
+                      <Image 
+                        src={item.image || "/placeholder.png"} // Fallback Image
+                        alt={item.name} 
+                        fill 
+                        className="object-cover"
+                        sizes="100px"
+                      />
+                    </div>
+                    <div className="flex-grow">
+                      <p className="text-white font-semibold">{item.name}</p>
+                      <div className="text-sm text-gray-400 flex gap-3 mt-1">
+                        <span className="bg-gray-700 px-2 py-1 rounded text-xs">{item.duration} Hari</span>
+                        <span className="bg-gray-700 px-2 py-1 rounded text-xs">x{item.quantity}</span>
+                      </div>
+                    </div>
+                    <p className="text-teal-400 font-medium">
+                      {formatCurrency(itemPrice * (item.duration || 1) * (item.quantity || 1))}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
+          </div>
+
+          {/* SUMMARY PEMBAYARAN */}
+          <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 sticky top-6">
+            <h2 className="text-white text-xl font-bold mb-6">Rincian Pembayaran</h2>
+
+            <div className="flex justify-between text-gray-300 mb-2">
+              <span>Total Biaya Sewa</span>
+              <span>{formatCurrency(totalBiayaSewa)}</span>
+            </div>
+
+            <div className="flex justify-between text-gray-300 mb-4">
+              <span>Biaya Pengiriman</span>
+              <span>{formatCurrency(biayaOngkir)}</span>
+            </div>
+
+            <div className="border-t border-gray-700 my-4"></div>
+
+            <div className="flex justify-between text-white text-xl font-bold mb-6">
+              <span>Total Bayar</span>
+              <span className="text-teal-400">{formatCurrency(totalPembayaran)}</span>
+            </div>
+
+            <button
+              onClick={handleCreateOrder}
+              // Disable jika loading, cart kosong, atau alamat belum ada
+              disabled={loading || items.length === 0 || !latestAddress}
+              className={`w-full py-3 font-bold rounded-lg transition ${
+                loading || items.length === 0 || !latestAddress
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  : "bg-teal-500 hover:bg-teal-600 text-white shadow-lg shadow-teal-500/20"
+              }`}
+            >
+              {loading ? "Memproses..." : "Bayar Sekarang"}
+            </button>
+            
+            {!latestAddress && (
+                <p className="text-red-400 text-xs text-center mt-3">
+                    *Mohon isi alamat pengiriman terlebih dahulu
+                </p>
+            )}
+          </div>
         </div>
       </main>
+
       <Footer />
     </div>
   );

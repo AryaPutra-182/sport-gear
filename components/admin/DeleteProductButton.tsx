@@ -1,33 +1,56 @@
 "use client";
 
-import { deleteProduct } from "@/app/actions";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function DeleteProductButton({ productId, imageUrl }: { productId: number, imageUrl: string }) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
 
   const handleDelete = async () => {
-    // Tampilkan dialog konfirmasi
-    const confirmed = window.confirm("Apakah Anda yakin ingin menghapus produk ini? Aksi ini tidak bisa dibatalkan.");
-    
-    if (confirmed) {
-      setIsDeleting(true);
-      const result = await deleteProduct(productId, imageUrl);
-      if (!result.success) {
-        alert("Gagal menghapus produk: " + result.error);
-      }
-      // Refresh data akan ditangani oleh revalidatePath di server action
-      setIsDeleting(false);
+    const confirmDelete = confirm("Yakin ingin menghapus produk ini? Tindakan ini tidak bisa dibatalkan.");
+
+    if (!confirmDelete) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Anda harus login sebagai admin!");
+      return;
     }
+
+    setIsDeleting(true);
+
+    try {
+      const res = await fetch(`http://localhost:4000/api/products/${productId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Gagal menghapus produk");
+      }
+
+      alert("Produk berhasil dihapus!");
+      router.refresh();
+
+    } catch (error: any) {
+      alert(error.message);
+    }
+
+    setIsDeleting(false);
   };
 
   return (
-    <button 
-      onClick={handleDelete} 
+    <button
+      onClick={handleDelete}
       disabled={isDeleting}
       className="font-medium text-red-500 hover:underline disabled:text-gray-400 disabled:cursor-not-allowed"
     >
-      {isDeleting ? 'Menghapus...' : 'Hapus'}
+      {isDeleting ? "Menghapus..." : "Hapus"}
     </button>
   );
 }

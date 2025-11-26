@@ -1,52 +1,86 @@
-// app/admin/produk/edit/[id]/page.tsx
-
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductForm from "@/components/admin/ProductForm";
-import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { cookies } from "next/headers";
-import { notFound } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 
-// Fungsi untuk mengambil data kategori
-async function getCategories(supabase: any) {
-  const { data, error } = await supabase.from('categories').select('id, name');
-  if (error) {
-    console.error("Error fetching categories:", error);
+// --- Validasi Admin ---
+async function validateAdmin() {
+  const token = cookies().get("token")?.value;
+
+  if (!token) redirect("/login?redirect_to=/admin/produk");
+
+  const res = await fetch("http://localhost:4000/api/auth/me", {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+
+  const json = await res.json();
+  const user = json.data || json;
+
+  if (!user || user.role !== "admin") redirect("/");
+
+  return token;
+}
+
+// --- Fetch Helpers ---
+async function getCategories(token: string) {
+  try {
+    const res = await fetch("http://localhost:4000/api/categories", {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    const json = await res.json();
+    return Array.isArray(json.data) ? json.data : [];
+  } catch (e) {
     return [];
   }
-  return data;
 }
 
-// Fungsi untuk mengambil data produk spesifik
-async function getProduct(supabase: any, id: string) {
-  const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
-  if (error) {
-    // Jika produk tidak ditemukan, arahkan ke halaman 404
-    notFound();
+async function getProduct(id: string, token: string) {
+  try {
+    const res = await fetch(`http://localhost:4000/api/products/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+
+    if (res.status === 404) return null;
+
+    const json = await res.json();
+    return json.data || json; // Handle struktur response { data: ... }
+  } catch (e) {
+    return null;
   }
-  return data;
 }
 
+// ---- PAGE COMPONENT ----
 export default async function EditProdukPage({ params }: { params: { id: string } }) {
-  const cookieStore = cookies();
-  const supabase = createSupabaseServerClient();
-  
-  // Ambil data produk dan kategori secara bersamaan untuk efisiensi
+  const token = await validateAdmin();
+
   const [product, categories] = await Promise.all([
-    getProduct(supabase, params.id),
-    getCategories(supabase)
+    getProduct(params.id, token),
+    getCategories(token),
   ]);
+
+  if (!product) notFound();
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0D1117]">
       <Navbar />
-      
+
       <main className="flex-grow container mx-auto px-6 py-12">
-        <div className="max-w-2xl mx-auto bg-gray-800 rounded-lg p-8">
-          <h1 className="text-3xl font-bold text-white mb-6 text-center">
-            Edit Produk
-          </h1>
-          {/* Render komponen form dan oper data produk dan kategori */}
+        <div className="max-w-2xl mx-auto bg-gray-800 rounded-lg p-8 border border-gray-700 shadow-xl">
+          <div className="flex items-center justify-between mb-6">
+             <h1 className="text-3xl font-bold text-white text-center flex-grow">
+               Edit Produk
+             </h1>
+             {/* Tombol kembali optional */}
+             <a href="/admin/produk" className="text-gray-400 hover:text-white text-sm underline">
+                Batal
+             </a>
+          </div>
+
+          {/* Kirim data produk lama (product) ke initialData */}
           <ProductForm categories={categories} initialData={product} />
         </div>
       </main>

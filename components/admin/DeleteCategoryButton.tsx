@@ -1,31 +1,26 @@
-// app/components/admin/DeleteCategoryButton.tsx
-
 "use client";
 
-import { deleteCategory } from "@/app/actions";
-import { useState } from "react";
+import { deleteCategory } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { TrashIcon } from "@heroicons/react/24/outline";
 
-export default function DeleteCategoryButton({ categoryId, imageUrl }: { categoryId: number, imageUrl: string }) {
-  const [isLoading, setIsLoading] = useState(false);
+export default function DeleteCategoryButton({ id }: { id: number }) {
   const router = useRouter();
 
   const handleDelete = async () => {
-    if (confirm("Anda yakin ingin menghapus kategori ini? Produk dalam kategori ini tidak akan terhapus.")) {
-      setIsLoading(true);
-      const result = await deleteCategory(categoryId, imageUrl);
-      if (!result.success) {
-        alert("Gagal menghapus kategori.");
-      } else {
+    if (!confirm("Yakin hapus kategori ini? Produk di dalamnya mungkin akan error.")) return;
+
+    const res = await deleteCategory(id);
+    if (res.error) {
+        alert("Gagal hapus: " + res.error);
+    } else {
         router.refresh();
-      }
-      setIsLoading(false);
     }
   };
 
   return (
-    <button onClick={handleDelete} disabled={isLoading} className="font-medium text-red-500 hover:underline disabled:text-gray-400">
-      {isLoading ? "Menghapus..." : "Hapus"}
+    <button onClick={handleDelete} className="text-red-400 hover:text-red-300 transition" title="Hapus">
+      <TrashIcon className="h-5 w-5" />
     </button>
   );
 }

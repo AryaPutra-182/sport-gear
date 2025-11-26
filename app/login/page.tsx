@@ -1,22 +1,20 @@
-// app/login/page.tsx
-
 "use client";
 
-import { Suspense } from 'react'; // 1. Impor Suspense
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabaseClient";
 import { useRouter, useSearchParams } from "next/navigation";
+import { loginRequest } from "@/lib/api";
+import { useBookingStore } from "@/store/useBookingStore"; 
 
-// 2. Kita buat komponen inti dari halaman login di sini
 function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const setUser = useBookingStore((state) => state.setUser);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Hook ini sekarang akan bekerja dengan benar di dalam Suspense
-  const searchParams = useSearchParams(); 
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -24,19 +22,35 @@ function LoginForm() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
+      const res = await loginRequest(email, password);
 
-      if (error) {
-        setError(error.message);
+      if (res.error) {
+        setError(res.error);
       } else {
-        const redirectTo = searchParams.get('redirect_to');
-        window.location.href = redirectTo || '/produk';
+        // 1. Ambil token (Support berbagai format response)
+        const token = res.token || res.access_token || res.data?.token;
+
+        if (token) {
+          // 2. Simpan token ke LocalStorage
+          localStorage.setItem("token", token);
+
+          // 3. Update User ke Store Global
+          const userData = res.user || res.data?.user;
+          if (userData) {
+            setUser(userData);
+          }
+
+          // 4. Redirect ke halaman tujuan atau produk
+          const redirectTo = searchParams.get("redirect_to");
+          router.push(redirectTo || "/produk");
+          router.refresh(); // Refresh agar navbar merender ulang state
+        } else {
+          setError("Login gagal: Token tidak diterima dari server.");
+        }
       }
-    } catch (e) {
-      setError("Terjadi kesalahan, silakan coba lagi.");
+    } catch (err) {
+      console.error(err);
+      setError("Terjadi kesalahan sistem, silakan coba lagi.");
     } finally {
       setIsLoading(false);
     }
@@ -51,38 +65,50 @@ function LoginForm() {
           </Link>
           <h2 className="mt-4 text-2xl font-bold text-white">Login Into SportGear</h2>
         </div>
+
         <form className="space-y-6" onSubmit={handleLogin}>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300">Email address</label>
-            <input id="email" name="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-3 py-2 mt-1 text-white bg-gray-700 border border-gray-600 rounded-md"/>
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300">Password</label>
-            <input id="password" name="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-3 py-2 mt-1 text-white bg-gray-700 border border-gray-600 rounded-md"/>
-          </div>
-          <div className="text-sm text-right">
-            <Link href="/lupa-password" className="font-medium text-gray-400 hover:text-teal-400">Lupa password?</Link>
-          </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
-          <div>
-            <button type="submit" disabled={isLoading} className="w-full px-4 py-2 font-bold text-white bg-teal-500 rounded-md hover:bg-teal-600 disabled:bg-gray-500">
-              {isLoading ? 'Logging in...' : 'Login'}
-            </button>
-          </div>
+          <input
+            type="email"
+            required
+            placeholder="Email"
+            className="w-full px-3 py-2 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <input
+            type="password"
+            required
+            placeholder="Password"
+            className="w-full px-3 py-2 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          {error && <p className="text-sm text-red-500 bg-red-500/10 p-2 rounded">{error}</p>}
+
+          <button 
+            disabled={isLoading}
+            className="w-full py-2 font-bold text-white bg-teal-500 rounded-md hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isLoading ? "Logging in..." : "Login"}
+          </button>
         </form>
-        <p className="text-sm text-center text-gray-400">
-          Belum punya akun?{' '}
-          <Link href="/register" className="font-medium text-teal-400 hover:underline">Daftar di sini</Link>
+
+        <p className="text-center text-gray-400 text-sm">
+          Belum punya akun?{" "}
+          <Link href="/register" className="text-teal-400 hover:underline">
+            Daftar
+          </Link>
         </p>
       </div>
     </div>
   );
 }
 
-// 3. Ini adalah komponen utama yang diekspor, yang membungkus form kita
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-white">Loading...</div>}>
       <LoginForm />
     </Suspense>
   );
