@@ -27,23 +27,25 @@ function LoginForm() {
       if (res.error) {
         setError(res.error);
       } else {
-        // 1. Ambil token (Support berbagai format response)
         const token = res.token || res.access_token || res.data?.token;
 
         if (token) {
-          // 2. Simpan token ke LocalStorage
           localStorage.setItem("token", token);
+          document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
 
-          // 3. Update User ke Store Global
           const userData = res.user || res.data?.user;
           if (userData) {
             setUser(userData);
           }
 
-          // 4. Redirect ke halaman tujuan atau produk
-          const redirectTo = searchParams.get("redirect_to");
-          router.push(redirectTo || "/produk");
-          router.refresh(); // Refresh agar navbar merender ulang state
+          if (userData?.role === 'admin') {
+             router.push("/admin/dashboard");
+          } else {
+             const redirectTo = searchParams.get("redirect_to");
+             router.push(redirectTo || "/produk");
+          }
+          
+          router.refresh(); 
         } else {
           setError("Login gagal: Token tidak diterima dari server.");
         }
@@ -57,48 +59,73 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#0D1117]">
-      <div className="w-full max-w-md p-8 space-y-8 bg-gray-800 rounded-lg shadow-lg">
+    // ✅ Background Cream
+    <div className="flex items-center justify-center min-h-screen bg-[#F7F5E9] px-4">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-xl shadow-lg border border-gray-200">
+        
+        {/* Header Logo */}
         <div className="text-center">
-          <Link href="/" className="text-3xl font-bold text-white">
-            Sport<span className="text-teal-400">Gear</span>
+          <Link href="/" className="text-4xl font-extrabold text-[#122D4F]">
+            Rentletics
           </Link>
-          <h2 className="mt-4 text-2xl font-bold text-white">Login Into SportGear</h2>
+          <h2 className="mt-4 text-xl font-medium text-gray-600">
+            Welcome back! Please login.
+          </h2>
         </div>
 
         <form className="space-y-6" onSubmit={handleLogin}>
-          <input
-            type="email"
-            required
-            placeholder="Email"
-            className="w-full px-3 py-2 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          
+          {/* Email Input */}
+          <div>
+            <label className="block text-sm font-bold text-[#122D4F] mb-2">Email Address</label>
+            <input
+              type="email"
+              required
+              placeholder="name@example.com"
+              className="w-full px-4 py-3 bg-white text-gray-800 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#122D4F] focus:border-transparent transition placeholder-gray-400"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
 
-          <input
-            type="password"
-            required
-            placeholder="Password"
-            className="w-full px-3 py-2 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          {/* Password Input */}
+          <div>
+            <label className="block text-sm font-bold text-[#122D4F] mb-2">Password</label>
+            <input
+              type="password"
+              required
+              placeholder="••••••••"
+              className="w-full px-4 py-3 bg-white text-gray-800 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#122D4F] focus:border-transparent transition placeholder-gray-400"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
 
-          {error && <p className="text-sm text-red-500 bg-red-500/10 p-2 rounded">{error}</p>}
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-200 text-center font-medium">
+              {error}
+            </div>
+          )}
 
+          {/* Submit Button */}
           <button 
             disabled={isLoading}
-            className="w-full py-2 font-bold text-white bg-teal-500 rounded-md hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className={`w-full py-3.5 font-bold rounded-lg transition-all shadow-md transform hover:-translate-y-0.5 ${
+                isLoading 
+                ? "bg-gray-400 text-gray-200 cursor-not-allowed" 
+                : "bg-[#F4B400] hover:bg-[#e0a500] text-[#122D4F] hover:shadow-lg"
+            }`}
           >
             {isLoading ? "Logging in..." : "Login"}
           </button>
         </form>
 
-        <p className="text-center text-gray-400 text-sm">
+        {/* Footer Link */}
+        <p className="text-center text-gray-600 text-sm">
           Belum punya akun?{" "}
-          <Link href="/register" className="text-teal-400 hover:underline">
-            Daftar
+          <Link href="/register" className="text-[#122D4F] font-bold hover:text-[#F4B400] transition underline">
+            Daftar Sekarang
           </Link>
         </p>
       </div>
@@ -108,7 +135,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-white">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#F7F5E9] text-[#122D4F]">Loading...</div>}>
       <LoginForm />
     </Suspense>
   );

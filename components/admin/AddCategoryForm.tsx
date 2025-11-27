@@ -10,7 +10,8 @@ interface Props {
   initialData?: {
     id: number;
     name: string;
-    image_url: string;
+    imageUrl?: string; // CamelCase (Backend Baru)
+    image_url?: string; // SnakeCase (Legacy/Safety)
   };
 }
 
@@ -20,7 +21,11 @@ export default function CategoryForm({ initialData }: Props) {
   
   const [name, setName] = useState(initialData?.name || "");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewImage, setPreviewImage] = useState<string | null>(initialData?.image_url || null);
+  
+  // Logic: Cek imageUrl dulu, kalau gak ada cek image_url
+  const [previewImage, setPreviewImage] = useState<string | null>(
+    initialData?.imageUrl || initialData?.image_url || null
+  );
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -60,7 +65,7 @@ export default function CategoryForm({ initialData }: Props) {
             setPreviewImage(null);
         }
         
-        router.refresh(); // Refresh halaman agar list update
+        router.refresh(); 
       }
     } catch (error) {
       console.error(error);
@@ -71,36 +76,46 @@ export default function CategoryForm({ initialData }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
+      
       {/* Upload Gambar */}
       <div>
-        <label className="block text-sm text-gray-400 mb-2">Ikon Kategori</label>
+        <label className="block text-sm font-bold text-[#122D4F] mb-2">Ikon Kategori</label>
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-gray-700 rounded-lg overflow-hidden relative border border-gray-600 flex items-center justify-center flex-shrink-0">
+          {/* Preview Box */}
+          <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden relative border border-gray-300 flex items-center justify-center flex-shrink-0">
             {previewImage ? (
               <Image src={previewImage} alt="Preview" fill className="object-cover" />
             ) : (
-              <PhotoIcon className="h-6 w-6 text-gray-500" />
+              <PhotoIcon className="h-8 w-8 text-gray-400" />
             )}
           </div>
+          
+          {/* File Input */}
           <input
             type="file"
             accept="image/*"
             onChange={handleImageChange}
-            className="text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-500 file:text-white hover:file:bg-teal-600 cursor-pointer"
+            className="block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-full file:border-0
+              file:text-sm file:font-bold
+              file:bg-[#122D4F] file:text-white
+              hover:file:bg-[#0C2E4E]
+              cursor-pointer"
           />
         </div>
       </div>
 
       {/* Nama Kategori */}
       <div>
-        <label className="block text-sm text-gray-400 mb-1">Nama Kategori</label>
+        <label className="block text-sm font-bold text-[#122D4F] mb-2">Nama Kategori</label>
         <input
           type="text"
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full bg-gray-700 text-white p-3 rounded border border-gray-600 focus:border-teal-500 outline-none"
+          className="w-full px-4 py-2.5 bg-white text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#122D4F] focus:border-transparent transition placeholder-gray-400"
           placeholder="Contoh: Sepatu Lari"
         />
       </div>
@@ -108,7 +123,11 @@ export default function CategoryForm({ initialData }: Props) {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 rounded-lg transition disabled:opacity-50"
+        className={`w-full font-bold py-3 rounded-lg transition-all shadow-md ${
+            isLoading 
+            ? "bg-gray-400 text-gray-100 cursor-not-allowed" 
+            : "bg-[#122D4F] hover:bg-[#0C2E4E] text-white hover:shadow-lg"
+        }`}
       >
         {isLoading ? "Menyimpan..." : initialData ? "Simpan Perubahan" : "Tambah Kategori"}
       </button>

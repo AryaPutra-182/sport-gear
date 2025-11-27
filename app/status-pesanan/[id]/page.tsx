@@ -52,14 +52,15 @@ export default function StatusPesananPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-[#0D1117] text-white">
-        Loading Status...
+      <div className="flex justify-center items-center min-h-screen bg-[#F7F5E9] text-[#122D4F]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#122D4F]"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0D1117]">
+    // ✅ Background Cream
+    <div className="flex flex-col min-h-screen bg-[#F7F5E9]">
       <Navbar />
 
       <main className="flex-grow container mx-auto px-6 py-12">
@@ -67,51 +68,61 @@ export default function StatusPesananPage() {
           
           {/* Header */}
           <div className="text-center mb-10">
-            <h1 className="text-3xl font-bold text-white">Detail Status Pesanan #{id}</h1>
-            <p className="text-gray-400 mt-2">
-               Status Saat Ini: <span className="text-teal-400 font-bold uppercase">{trackingData?.currentStatus}</span>
+            <h1 className="text-3xl font-extrabold text-[#122D4F]">Detail Status Pesanan #{id}</h1>
+            <p className="text-gray-600 mt-2 font-medium">
+               Status Saat Ini: <span className="text-[#F4B400] font-bold uppercase tracking-wider bg-[#122D4F] px-3 py-1 rounded ml-2 text-sm">{trackingData?.currentStatus.replace("_", " ")}</span>
             </p>
           </div>
 
           {/* Maps Dummy */}
-          <div className="bg-gray-800 rounded-lg overflow-hidden mb-8 border border-gray-700 relative h-64 w-full">
+          <div className="bg-white rounded-xl overflow-hidden mb-8 border border-gray-200 shadow-md relative h-64 w-full">
              <iframe 
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126646.2096054388!2d112.6426426368457!3d-7.275614063847083!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7fbf8381ac47f%3A0x3027a76e352be40!2sSurabaya%2C%20Surabaya%20City%2C%20East%20Java!5e0!3m2!1sen!2sid!4v1700000000000!5m2!1sen!2sid" 
                 width="100%" 
                 height="100%" 
-                style={{ border: 0, filter: "invert(90%) hue-rotate(180deg)" }} 
+                style={{ border: 0 }} // Hapus filter invert agar peta terlihat normal/cerah
                 allowFullScreen 
                 loading="lazy" 
              />
           </div>
 
           {/* TIMELINE STATUS */}
-          <div className="bg-gray-800 rounded-lg p-8 border border-gray-700">
-            <h2 className="text-xl font-bold text-white mb-8 border-b border-gray-700 pb-4">
+          <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-lg">
+            <h2 className="text-xl font-bold text-[#122D4F] mb-8 border-b border-gray-100 pb-4">
               Riwayat Perjalanan
             </h2>
 
             {trackingData && trackingData.history && trackingData.history.length > 0 ? (
-              <div className="space-y-8 relative pl-8 border-l-2 border-gray-700 ml-2">
+              <div className="space-y-8 relative pl-8 border-l-2 border-gray-200 ml-2">
                 
                 {trackingData.history.map((log: any, index: number) => (
-                  <div key={log.id} className="relative">
+                  <div key={log.id} className="relative group">
                     {/* Dot Indicator */}
-                    <span className={`absolute -left-[41px] top-0 h-5 w-5 rounded-full border-4 border-[#0D1117] ${index === 0 ? "bg-teal-500 animate-pulse" : "bg-gray-500"}`}></span>
+                    <span className={`absolute -left-[41px] top-0 h-5 w-5 rounded-full border-4 border-[#F7F5E9] shadow-sm ${
+                        index === 0 
+                        ? "bg-[#F4B400] scale-125 ring-4 ring-[#F4B400]/20" // Highlight status terbaru
+                        : "bg-gray-300"
+                    }`}></span>
                     
-                    {/* Content */}
-                    <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-                        <h3 className="text-white font-bold text-lg">{log.statusText}</h3>
-                        <p className="text-sm text-gray-400 mt-1">{formatDate(log.timestamp)}</p>
+                    {/* Content Card */}
+                    <div className={`p-4 rounded-lg border transition-all ${
+                        index === 0 
+                        ? "bg-[#F7F5E9] border-[#122D4F]/20 shadow-sm" 
+                        : "bg-white border-gray-100"
+                    }`}>
+                        <h3 className={`font-bold text-lg ${index === 0 ? "text-[#122D4F]" : "text-gray-500"}`}>
+                            {log.statusText}
+                        </h3>
+                        <p className="text-sm text-gray-400 mt-1 font-medium">{formatDate(log.timestamp)}</p>
                     </div>
                   </div>
                 ))}
 
               </div>
             ) : (
-              <div className="text-center py-10 bg-gray-700/30 rounded-lg">
-                <p className="text-gray-400">Belum ada data riwayat status.</p>
-                <p className="text-xs text-gray-500 mt-1">
+              <div className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                <p className="text-gray-500">Belum ada data riwayat status.</p>
+                <p className="text-xs text-gray-400 mt-1">
                     (Pesanan ini mungkin dibuat sebelum fitur tracking aktif)
                 </p>
               </div>

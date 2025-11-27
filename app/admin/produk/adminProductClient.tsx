@@ -11,14 +11,13 @@ interface Category {
   name: string;
 }
 
-// ✅ UPDATE 1: Sesuaikan Interface dengan return Prisma (CamelCase)
 interface Product {
   id: number;
   name: string;
   description: string;
-  pricePerDay: number; // Ubah dari price_per_day
+  pricePerDay: number;
   stock: number;
-  imageUrl: string;    // Ubah dari image_url
+  imageUrl: string;
   categoryId: number;
   category?: Category;
 }
@@ -71,11 +70,9 @@ export default function AdminProductClient({ initialProducts, categories }: Prop
     setEditingId(product.id);
     setName(product.name);
     setDescription(product.description || "");
-    // ✅ UPDATE 2: Ambil value dari pricePerDay
     setPrice(product.pricePerDay.toString());
     setStock(product.stock.toString());
     setCategoryId(product.categoryId);
-    // ✅ UPDATE 3: Ambil value dari imageUrl
     setExistingImageUrl(product.imageUrl || ""); 
     setPreviewImage(null);
     setImageFile(null);
@@ -95,13 +92,12 @@ export default function AdminProductClient({ initialProducts, categories }: Prop
     const res = await deleteProduct(id);
     if (res.error) return alert("Gagal hapus: " + res.error);
     
-    // Update UI local
     setProducts((prev) => prev.filter((p) => p.id !== id));
     router.refresh(); 
     alert("Produk berhasil dihapus");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -109,8 +105,7 @@ export default function AdminProductClient({ initialProducts, categories }: Prop
       const formData = new FormData();
       formData.append("name", name);
       formData.append("description", description);
-      // Controller Backend mengharapkan 'price_per_day' (Snake Case) dari Form
-      formData.append("price_per_day", price); 
+      formData.append("price_per_day", price);
       formData.append("stock", stock);
       formData.append("categoryId", categoryId.toString());
 
@@ -128,9 +123,27 @@ export default function AdminProductClient({ initialProducts, categories }: Prop
       if (res.error) {
         alert(res.error);
       } else {
-        alert(editingId ? "Produk diperbarui!" : "Produk ditambahkan!");
+        // ✅ PERBAIKAN DISINI: Update State Langsung (Instant UI Update)
+        
+        const newData = res.data; // Data produk baru dari backend
+
+        if (editingId) {
+          // Logic Edit: Ganti item lama dengan yang baru
+          setProducts((prev) => 
+            prev.map((p) => (p.id === editingId ? newData : p))
+          );
+          alert("Produk diperbarui!");
+        } else {
+          // Logic Tambah: Masukkan item baru ke paling atas
+          setProducts((prev) => [newData, ...prev]);
+          alert("Produk ditambahkan!");
+        }
+
         setIsModalOpen(false);
-        router.refresh(); // Refresh data server component
+        resetForm(); // Bersihkan form
+        
+        // Tetap panggil refresh agar server component sinkron di background
+        router.refresh(); 
       }
     } catch (error) {
       console.error(error);
@@ -146,18 +159,19 @@ export default function AdminProductClient({ initialProducts, categories }: Prop
 
   return (
     <div className="space-y-6">
+      
       {/* HEADER & SEARCH */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-800 p-4 rounded-lg">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <input 
             type="text" 
             placeholder="Cari nama produk..." 
-            className="bg-gray-700 text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 w-full md:w-1/3"
+            className="bg-gray-50 text-[#122D4F] px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#122D4F] focus:border-transparent w-full md:w-1/3 transition placeholder-gray-400"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
         />
         <button
           onClick={handleOpenCreate}
-          className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-md font-bold transition"
+          className="flex items-center gap-2 bg-[#122D4F] hover:bg-[#0C2E4E] text-white px-5 py-2.5 rounded-lg font-bold transition shadow-md hover:shadow-lg"
         >
           <PlusIcon className="h-5 w-5" />
           Tambah Produk
@@ -165,9 +179,9 @@ export default function AdminProductClient({ initialProducts, categories }: Prop
       </div>
 
       {/* TABLE */}
-      <div className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
-        <table className="w-full text-left text-gray-300">
-          <thead className="bg-gray-900 text-white uppercase text-sm font-bold">
+      <div className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+        <table className="w-full text-left text-gray-600">
+          <thead className="bg-[#122D4F] text-white uppercase text-xs font-bold tracking-wider">
             <tr>
               <th className="p-4">Gambar</th>
               <th className="p-4">Nama Produk</th>
@@ -177,12 +191,11 @@ export default function AdminProductClient({ initialProducts, categories }: Prop
               <th className="p-4 text-center">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700">
+          <tbody className="divide-y divide-gray-100">
             {filteredProducts.map((product) => (
-              <tr key={product.id} className="hover:bg-gray-700/50 transition">
+              <tr key={product.id} className="hover:bg-[#F7F5E9] transition-colors">
                 <td className="p-4">
-                  <div className="w-12 h-12 relative rounded overflow-hidden bg-gray-600">
-                    {/* ✅ UPDATE 4: Gunakan imageUrl */}
+                  <div className="w-14 h-14 relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
                     <Image
                       src={product.imageUrl || "/placeholder.png"}
                       alt={product.name}
@@ -191,93 +204,122 @@ export default function AdminProductClient({ initialProducts, categories }: Prop
                     />
                   </div>
                 </td>
-                <td className="p-4 font-semibold text-white">{product.name}</td>
-                <td className="p-4"><span className="bg-gray-700 px-2 py-1 rounded text-xs">{product.category?.name || "Uncategorized"}</span></td>
-                
-                {/* ✅ UPDATE 5: Gunakan pricePerDay. Pastikan ada fallback (|| 0) */}
-                <td className="p-4 text-teal-400 font-mono">
+                <td className="p-4 font-bold text-[#122D4F]">{product.name}</td>
+                <td className="p-4">
+                    <span className="bg-blue-50 text-[#122D4F] px-3 py-1 rounded-full text-xs font-medium border border-blue-100">
+                        {product.category?.name || "Uncategorized"}
+                    </span>
+                </td>
+                <td className="p-4 font-mono text-[#122D4F] font-bold">
                     Rp {(product.pricePerDay || 0).toLocaleString("id-ID")}
                 </td>
                 
-                <td className="p-4">{product.stock}</td>
-                <td className="p-4 flex justify-center gap-3">
-                  <button onClick={() => handleOpenEdit(product)} className="text-blue-400 hover:text-blue-300"><PencilSquareIcon className="h-5 w-5" /></button>
-                  <button onClick={() => handleDelete(product.id)} className="text-red-400 hover:text-red-300"><TrashIcon className="h-5 w-5" /></button>
+                <td className="p-4 font-medium">{product.stock}</td>
+                <td className="p-4">
+                  <div className="flex justify-center gap-3">
+                    <button onClick={() => handleOpenEdit(product)} className="text-gray-400 hover:text-[#F4B400] transition-colors p-1" title="Edit">
+                        <PencilSquareIcon className="h-5 w-5" />
+                    </button>
+                    <button onClick={() => handleDelete(product.id)} className="text-gray-400 hover:text-red-500 transition-colors p-1" title="Hapus">
+                        <TrashIcon className="h-5 w-5" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
+            {filteredProducts.length === 0 && (
+                <tr>
+                    <td colSpan={6} className="text-center p-8 text-gray-400 italic">
+                        Tidak ada produk yang ditemukan.
+                    </td>
+                </tr>
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* MODAL FORM (Sama seperti sebelumnya, tapi pastikan variabel state benar) */}
+      {/* MODAL FORM */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg w-full max-w-lg border border-gray-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center p-4 border-b border-gray-700 bg-gray-900">
-              <h3 className="text-xl font-bold text-white">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-lg border border-gray-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50">
+              <h3 className="text-xl font-bold text-[#122D4F]">
                 {editingId ? "Edit Produk" : "Tambah Produk Baru"}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors">
                 <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
+            {/* Form Content */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
+              
               {/* Area Upload Gambar */}
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Foto Produk</label>
+                <label className="block text-sm font-bold text-[#122D4F] mb-2">Foto Produk</label>
                 <div className="flex items-start gap-4">
-                  <div className="w-24 h-24 bg-gray-700 rounded-lg overflow-hidden relative border border-gray-600 flex items-center justify-center flex-shrink-0">
+                  <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden relative border border-gray-300 flex items-center justify-center flex-shrink-0">
                     {previewImage ? (
                       <Image src={previewImage} alt="Preview" fill className="object-cover" />
                     ) : existingImageUrl ? (
-                      <Image src={existingImageUrl} alt="Existing" fill className="object-cover opacity-70" />
+                      <Image src={existingImageUrl} alt="Existing" fill className="object-cover opacity-90" />
                     ) : (
-                      <PhotoIcon className="h-8 w-8 text-gray-500" />
+                      <PhotoIcon className="h-8 w-8 text-gray-400" />
                     )}
                   </div>
+                  
                   <div className="flex-grow">
                      <input
                         type="file"
                         accept="image/*"
                         onChange={handleImageChange}
-                        className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-500 file:text-white hover:file:bg-teal-600 cursor-pointer"
+                        className="block w-full text-sm text-gray-500
+                          file:mr-4 file:py-2 file:px-4
+                          file:rounded-full file:border-0
+                          file:text-sm file:font-bold
+                          file:bg-[#122D4F] file:text-white
+                          hover:file:bg-[#0C2E4E]
+                          cursor-pointer"
                       />
+                      <p className="text-xs text-gray-400 mt-2">
+                        Format: JPG, PNG, WEBP. Maks 2MB.
+                      </p>
                   </div>
                 </div>
               </div>
 
               {/* Input Fields */}
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Nama Produk</label>
+                <label className="label-text">Nama Produk</label>
                 <input type="text" required className="input-field" value={name} onChange={(e) => setName(e.target.value)} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Harga (Per Hari)</label>
+                  <label className="label-text">Harga (Per Hari)</label>
                   <input type="number" required className="input-field" value={price} onChange={(e) => setPrice(e.target.value)} />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Stok</label>
+                  <label className="label-text">Stok</label>
                   <input type="number" required className="input-field" value={stock} onChange={(e) => setStock(e.target.value)} />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Kategori</label>
+                <label className="label-text">Kategori</label>
                 <select className="input-field" value={categoryId} onChange={(e) => setCategoryId(Number(e.target.value))}>
                   {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Deskripsi</label>
-                <textarea rows={3} className="input-field" value={description} onChange={(e) => setDescription(e.target.value)} />
+                <label className="label-text">Deskripsi</label>
+                <textarea rows={3} className="input-field resize-none" value={description} onChange={(e) => setDescription(e.target.value)} />
               </div>
 
-              <button type="submit" disabled={isLoading} className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 rounded mt-4 disabled:opacity-50">
+              <button type="submit" disabled={isLoading} className="w-full bg-[#122D4F] hover:bg-[#0C2E4E] text-white font-bold py-3.5 rounded-lg transition-all shadow-md mt-2 disabled:opacity-50">
                 {isLoading ? "Menyimpan..." : "Simpan Data"}
               </button>
             </form>
@@ -285,18 +327,28 @@ export default function AdminProductClient({ initialProducts, categories }: Prop
         </div>
       )}
       
+      {/* Styles Lokal untuk Input */}
       <style jsx>{`
+        .label-text {
+          display: block;
+          font-size: 0.875rem; /* text-sm */
+          font-weight: 700;
+          color: #122D4F;
+          margin-bottom: 0.5rem;
+        }
         .input-field {
           width: 100%;
-          background-color: #374151;
-          color: white;
-          padding: 0.5rem;
-          border-radius: 0.25rem;
-          border: 1px solid #4B5563;
+          background-color: #ffffff;
+          color: #1F2937; /* gray-800 */
+          padding: 0.75rem 1rem;
+          border-radius: 0.5rem;
+          border: 1px solid #D1D5DB; /* gray-300 */
           outline: none;
+          transition: all 0.2s;
         }
         .input-field:focus {
-          border-color: #14B8A6;
+          border-color: #122D4F;
+          box-shadow: 0 0 0 2px rgba(18, 45, 79, 0.1);
         }
       `}</style>
     </div>

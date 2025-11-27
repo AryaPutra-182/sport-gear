@@ -15,6 +15,19 @@ const formatCurrency = (amount: number) =>
     minimumFractionDigits: 0,
   }).format(amount);
 
+// Helper Status Color (Light Theme)
+const getStatusBadgeClass = (status: string) => {
+    const map: any = {
+        unpaid: "bg-red-100 text-red-700 border-red-200",
+        paid: "bg-blue-100 text-blue-700 border-blue-200",
+        dikemas: "bg-yellow-100 text-yellow-700 border-yellow-200",
+        dikirim: "bg-purple-100 text-purple-700 border-purple-200",
+        selesai: "bg-green-100 text-green-700 border-green-200",
+        batal: "bg-gray-200 text-gray-600 border-gray-300",
+    };
+    return map[status] || "bg-gray-100 text-gray-600";
+};
+
 // --- 1. Validasi Admin & Ambil Token ---
 async function validateAdmin() {
   const token = cookies().get("token")?.value;
@@ -60,16 +73,24 @@ export default async function AdminDetailPesananPage({ params }: { params: { id:
   if (!order || !order.id) notFound();
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0D1117]">
+    // ✅ Background Cream
+    <div className="flex flex-col min-h-screen bg-[#F7F5E9]">
       <Navbar />
       <main className="flex-grow container mx-auto px-6 py-12">
 
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-white">
-            Detail Pesanan #{order.id}
-            </h1>
-            <a href="/admin/pesanan" className="text-gray-400 hover:text-white text-sm underline">
-                &larr; Kembali
+            <div>
+                <h1 className="text-3xl font-extrabold text-[#122D4F]">
+                    Detail Pesanan #{order.id}
+                </h1>
+                <p className="text-gray-500 text-sm mt-1">Lihat dan kelola status pesanan pelanggan.</p>
+            </div>
+            <a 
+                href="/admin/pesanan" 
+                className="text-[#122D4F] hover:text-[#F4B400] text-sm font-bold underline transition-colors"
+            >
+                &larr; Kembali ke Daftar
             </a>
         </div>
 
@@ -78,49 +99,62 @@ export default async function AdminDetailPesananPage({ params }: { params: { id:
           {/* Kiri: User + Alamat */}
           <div className="space-y-6">
 
-            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-              <h2 className="text-xl text-teal-400 font-bold mb-4">Informasi Pemesan</h2>
-              <div className="text-gray-300 space-y-2">
-                  <p><strong>Nama:</strong> {order.user?.name || "N/A"}</p>
-                  <p><strong>Email:</strong> {order.user?.email || "N/A"}</p>
-                  <p><strong>Tanggal Order:</strong> {new Date(order.createdAt).toLocaleDateString("id-ID", { dateStyle: 'full' })}</p>
+            {/* Card Informasi Pemesan */}
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+              <h2 className="text-lg text-[#122D4F] font-bold mb-4 border-b border-gray-100 pb-2">
+                Informasi Pemesan
+              </h2>
+              <div className="text-gray-600 space-y-3 text-sm">
+                  <p><span className="font-semibold text-[#122D4F]">Nama:</span> {order.user?.name || "N/A"}</p>
+                  <p><span className="font-semibold text-[#122D4F]">Email:</span> {order.user?.email || "N/A"}</p>
+                  <p><span className="font-semibold text-[#122D4F]">Tanggal:</span> {new Date(order.createdAt).toLocaleDateString("id-ID", { dateStyle: 'full' })}</p>
               </div>
             </div>
 
-            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-              <h2 className="text-xl text-teal-400 font-bold mb-4">Alamat Pengiriman</h2>
+            {/* Card Alamat */}
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+              <h2 className="text-lg text-[#122D4F] font-bold mb-4 border-b border-gray-100 pb-2">
+                Alamat Pengiriman
+              </h2>
               {order.address ? (
-                  <div className="text-gray-300 space-y-1">
-                    <p className="font-bold text-white">{order.address.recipientName}</p>
-                    <p>{order.address.phoneNumber}</p>
-                    <p>{order.address.fullAddress}</p>
-                    <p>{order.address.city} {order.address.postalCode}</p>
-                    {order.address.notes && <p className="italic text-sm text-gray-500 mt-2">"{order.address.notes}"</p>}
+                  <div className="text-gray-600 space-y-1 text-sm">
+                    <p className="font-bold text-[#122D4F] text-base">{order.address.recipientName}</p>
+                    <p className="text-[#F4B400] font-medium">{order.address.phoneNumber}</p>
+                    <div className="mt-2">
+                        <p>{order.address.fullAddress}</p>
+                        <p>{order.address.city} {order.address.postalCode}</p>
+                    </div>
+                    {order.address.notes && (
+                        <div className="mt-3 p-2 bg-[#F7F5E9] rounded border border-gray-200">
+                            <p className="italic text-xs text-gray-500">"Catatan: {order.address.notes}"</p>
+                        </div>
+                    )}
                   </div>
               ) : (
-                  <p className="text-red-400">Data alamat tidak ditemukan.</p>
+                  <p className="text-red-500 italic bg-red-50 p-3 rounded">Data alamat tidak ditemukan.</p>
               )}
             </div>
 
           </div>
 
           {/* Kanan: Products + Status */}
-          <div className="bg-gray-800 rounded-lg p-6 lg:col-span-2 border border-gray-700">
+          <div className="bg-white rounded-xl p-8 lg:col-span-2 border border-gray-200 shadow-lg">
 
-            <h2 className="text-xl text-teal-400 font-bold mb-4">Barang yang Disewa</h2>
+            <h2 className="text-xl text-[#122D4F] font-bold mb-6 border-b border-gray-100 pb-4">
+                Barang yang Disewa
+            </h2>
 
-            <div className="space-y-4 mb-6">
+            <div className="space-y-6 mb-8">
               {order.items?.map((item: any) => {
-                // Handle kemungkinan nama field berbeda (snake_case vs camelCase)
                 const productName = item.product?.name || "Produk dihapus";
                 const productImg = item.product?.imageUrl || item.product?.image_url || "/placeholder.png";
                 const price = item.priceAtOrder || item.product?.pricePerDay || 0;
                 const subtotal = price * item.quantity * item.duration;
 
                 return (
-                    <div key={item.id} className="flex justify-between items-center border-b border-gray-700 pb-4 last:border-none">
-                    <div className="flex items-center gap-4">
-                        <div className="relative w-14 h-14 bg-gray-700 rounded-md overflow-hidden flex-shrink-0">
+                    <div key={item.id} className="flex justify-between items-center border-b border-gray-100 pb-4 last:border-none">
+                    <div className="flex items-center gap-5">
+                        <div className="relative w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
                             <Image 
                                 src={productImg} 
                                 alt={productName} 
@@ -129,14 +163,19 @@ export default async function AdminDetailPesananPage({ params }: { params: { id:
                             />
                         </div>
                         <div>
-                        <p className="text-white font-semibold">{productName}</p>
-                        <p className="text-sm text-gray-400">
-                            {item.quantity} unit × {item.duration} hari
-                        </p>
+                        <p className="text-[#122D4F] font-bold text-lg">{productName}</p>
+                        <div className="flex gap-3 mt-1">
+                            <span className="text-xs bg-[#F7F5E9] text-[#122D4F] px-2 py-1 rounded border border-gray-200">
+                                {item.quantity} unit
+                            </span>
+                            <span className="text-xs bg-[#F7F5E9] text-[#122D4F] px-2 py-1 rounded border border-gray-200">
+                                {item.duration} hari
+                            </span>
+                        </div>
                         </div>
                     </div>
                     <div className="text-right">
-                        <p className="text-white font-medium">
+                        <p className="text-[#122D4F] font-bold text-lg">
                             {formatCurrency(subtotal)}
                         </p>
                         <p className="text-xs text-gray-500">
@@ -148,29 +187,27 @@ export default async function AdminDetailPesananPage({ params }: { params: { id:
               })}
             </div>
 
-            <div className="border-t border-gray-700 pt-4 mb-6">
-              <div className="flex justify-between text-lg text-white font-bold">
-                <span>Total Pesanan:</span>
-                <span className="text-teal-400">{formatCurrency(order.totalPrice)}</span>
-              </div>
+            <div className="bg-[#F7F5E9] p-6 rounded-xl border border-[#122D4F]/10">
+                <div className="flex justify-between text-xl text-[#122D4F] font-extrabold mb-6">
+                    <span>Total Pesanan:</span>
+                    <span className="text-[#F4B400]">{formatCurrency(order.totalPrice)}</span>
+                </div>
+
+                <div className="border-t border-gray-300 my-4 pt-4">
+                    <h2 className="text-lg text-[#122D4F] font-bold mb-3">Update Status</h2>
+                    
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
+                        <span className="text-gray-600 text-sm font-medium">Status Saat Ini:</span>
+                        <span className={`px-3 py-1 rounded border text-sm font-bold uppercase tracking-wider ${getStatusBadgeClass(order.status)}`}>
+                            {order.status.replace("_", " ")}
+                        </span>
+                    </div>
+
+                    {/* Komponen Update Status */}
+                    <UpdateStatusForm orderId={order.id} currentStatus={order.status} />
+                </div>
             </div>
 
-            <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-700">
-              <h2 className="text-lg text-white font-bold mb-2">Update Status Pesanan</h2>
-              <div className="flex items-center gap-4 mb-4">
-                  <span className="text-gray-400 text-sm">Status Saat Ini:</span>
-                  <span className={`px-3 py-1 rounded text-sm font-bold uppercase tracking-wider
-                    ${order.status === 'unpaid' ? 'bg-red-900 text-red-200' : 
-                      order.status === 'selesai' ? 'bg-green-900 text-green-200' : 
-                      'bg-yellow-900 text-yellow-200'
-                    }`}>
-                    {order.status.replace("_", " ")}
-                  </span>
-              </div>
-
-              {/* Komponen Update Status */}
-              <UpdateStatusForm orderId={order.id} currentStatus={order.status} />
-            </div>
           </div>
 
         </div>

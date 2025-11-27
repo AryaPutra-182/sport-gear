@@ -6,7 +6,12 @@ import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
 import { getProductsByCategory } from "@/lib/api";
 
-// ✅ 1. Update Interface (Support CamelCase dari Backend)
+// 🔥 TAMBAHAN PENTING:
+// Baris ini memaksa Next.js untuk TIDAK menyimpan cache (No-Cache).
+// Jadi setiap kali halaman dibuka, dia akan request data baru ke backend.
+export const dynamic = "force-dynamic"; 
+
+// Update Interface (Support CamelCase dari Backend)
 interface Product {
   id: number;
   name: string;
@@ -28,7 +33,10 @@ export default async function KategoriProdukPage({
   
   try {
     const res = await getProductsByCategory(categoryName);
+    
+    // Pastikan kita mengambil array data dengan aman
     products = Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
+    
   } catch (error) {
     console.error("Error fetching category products:", error);
     products = [];
@@ -58,14 +66,14 @@ export default async function KategoriProdukPage({
                 key={product.id}
                 id={product.id}
                 name={product.name}
-                // ✅ 2. Fix Price & Image Mapping (Anti NaN & Broken Image)
+                // Fix Price & Image Mapping (Anti NaN & Broken Image)
                 price_per_day={product.pricePerDay || product.price_per_day || 0}
                 image_url={product.imageUrl || product.image_url || "/placeholder.png"}
               />
             ))}
           </div>
         ) : (
-          // Tampilan Jika Kosong (Updated Style)
+          // Tampilan Jika Kosong
           <div className="text-center py-20 bg-white rounded-xl shadow-md border border-gray-100">
             <h2 className="text-2xl font-bold text-[#122D4F] mb-2">
               Produk Tidak Ditemukan

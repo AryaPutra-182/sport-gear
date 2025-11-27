@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { EyeIcon } from "@heroicons/react/24/outline";
 
 // Konfigurasi URL Backend
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
@@ -15,15 +16,15 @@ const formatCurrency = (amount: number) =>
     minimumFractionDigits: 0,
   }).format(amount);
 
-// --- 2. Helper Label Status (Dengan Warna) ---
+// --- 2. Helper Label Status (Updated Colors for Light Theme) ---
 const getStatusBadge = (status: string) => {
   const styles: any = {
-    unpaid: "bg-red-900 text-red-200",
-    paid: "bg-blue-900 text-blue-200",
-    dikemas: "bg-yellow-900 text-yellow-200",
-    dikirim: "bg-purple-900 text-purple-200",
-    selesai: "bg-green-900 text-green-200",
-    batal: "bg-gray-700 text-gray-400",
+    unpaid: "bg-red-100 text-red-700 border border-red-200",
+    paid: "bg-blue-100 text-blue-700 border border-blue-200",
+    dikemas: "bg-yellow-100 text-yellow-800 border border-yellow-200",
+    dikirim: "bg-purple-100 text-purple-700 border border-purple-200",
+    selesai: "bg-green-100 text-green-700 border border-green-200",
+    batal: "bg-gray-100 text-gray-600 border border-gray-200",
   };
   
   const labels: any = {
@@ -36,7 +37,7 @@ const getStatusBadge = (status: string) => {
   };
 
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-bold ${styles[status] || "bg-gray-700"}`}>
+    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${styles[status] || "bg-gray-100"}`}>
       {labels[status] || status}
     </span>
   );
@@ -70,10 +71,9 @@ async function validateAdmin() {
 // --- 4. Fetch ALL Orders (Admin Endpoint) ---
 async function getAllOrders(token: string) {
   try {
-    // Perhatikan: Endpointnya "/orders" (bukan /orders/mine)
     const res = await fetch(`${BASE_URL}/orders`, {
       headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store", // Pastikan data selalu fresh
+      cache: "no-store",
     });
 
     const json = await res.json();
@@ -89,35 +89,46 @@ export default async function AdminPesananPage() {
   const orders = await getAllOrders(token);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0D1117]">
+    // ✅ Background Cream
+    <div className="flex flex-col min-h-screen bg-[#F7F5E9]">
       <Navbar />
       
       <main className="flex-grow container mx-auto px-6 py-12">
-        <div className="bg-gray-800 rounded-lg p-8 border border-gray-700 shadow-xl">
-          <div className="flex justify-between items-center mb-6">
-             <h1 className="text-3xl font-bold text-white">Manajemen Pesanan</h1>
-             <span className="text-gray-400 text-sm">Total: {orders.length} Pesanan</span>
-          </div>
+        
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h1 className="text-4xl font-extrabold text-[#122D4F]">Manajemen Pesanan</h1>
+                <p className="text-gray-600 mt-1">Pantau semua transaksi sewa yang masuk.</p>
+            </div>
+            <div className="bg-white px-5 py-2 rounded-full shadow-sm border border-gray-200">
+                <span className="text-[#122D4F] font-bold text-sm">Total Pesanan: {orders.length}</span>
+            </div>
+        </div>
 
+        {/* Table Container (Putih + Shadow) */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm text-gray-300">
-              <thead className="text-xs uppercase bg-gray-900 text-gray-400">
+            <table className="min-w-full text-sm text-left">
+              <thead className="bg-[#122D4F] text-white uppercase text-xs font-bold tracking-wider">
                 <tr>
-                  <th className="px-6 py-4 text-left">ID</th>
-                  <th className="px-6 py-4 text-left">Pemesan</th>
-                  <th className="px-6 py-4 text-left">Tanggal</th>
-                  <th className="px-6 py-4 text-left">Total</th>
+                  <th className="px-6 py-4">ID Pesanan</th>
+                  <th className="px-6 py-4">Pelanggan</th>
+                  <th className="px-6 py-4">Tanggal</th>
+                  <th className="px-6 py-4">Total</th>
                   <th className="px-6 py-4 text-center">Status</th>
                   <th className="px-6 py-4 text-center">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-700">
+              <tbody className="divide-y divide-gray-100 text-gray-600">
                 {orders.length > 0 ? (
                   orders.map((order: any) => (
-                    <tr key={order.id} className="hover:bg-gray-700/50 transition">
-                      <td className="px-6 py-4 font-mono text-teal-400">#{order.id}</td>
+                    <tr key={order.id} className="hover:bg-[#F7F5E9] transition-colors">
+                      <td className="px-6 py-4 font-mono font-medium text-[#122D4F]">
+                        #{order.id}
+                      </td>
                       <td className="px-6 py-4">
-                        <p className="font-semibold text-white">{order.user?.name}</p>
+                        <p className="font-bold text-[#122D4F]">{order.user?.name}</p>
                         <p className="text-xs text-gray-500">{order.user?.email}</p>
                       </td>
                       <td className="px-6 py-4">
@@ -125,7 +136,7 @@ export default async function AdminPesananPage() {
                             day: 'numeric', month: 'short', year: 'numeric'
                         })}
                       </td>
-                      <td className="px-6 py-4 font-medium text-white">
+                      <td className="px-6 py-4 font-bold text-[#F4B400]">
                         {formatCurrency(order.totalPrice)}
                       </td>
                       <td className="px-6 py-4 text-center">
@@ -134,16 +145,17 @@ export default async function AdminPesananPage() {
                       <td className="px-6 py-4 text-center">
                         <Link 
                             href={`/admin/pesanan/${order.id}`} 
-                            className="text-blue-400 hover:text-blue-300 font-medium hover:underline"
+                            className="inline-flex items-center gap-2 bg-[#122D4F] hover:bg-[#0C2E4E] text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm"
                         >
-                          Detail / Proses
+                          <EyeIcon className="w-4 h-4" />
+                          Detail
                         </Link>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="text-center py-12 text-gray-500">
+                    <td colSpan={6} className="text-center py-12 text-gray-400 italic bg-gray-50">
                         Belum ada pesanan masuk.
                     </td>
                   </tr>

@@ -37,7 +37,7 @@ export default function AuthButton({ user, onLogout }: AuthButtonProps) {
       {user.role === "admin" && (
         <Link
           href="/admin/dashboard"
-          className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white py-2 px-4 rounded-full text-sm"
+          className="flex items-center gap-2 bg-[#a7b812] hover:bg-[#e44a02] text-white py-2 px-4 rounded-full text-sm"
         >
           <WrenchScrewdriverIcon className="h-4 w-4" />
           <span className="hidden sm:inline">Admin Panel</span>

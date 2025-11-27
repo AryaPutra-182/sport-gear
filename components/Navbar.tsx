@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-// 1. Tambahkan import UserCircleIcon
 import { ShoppingCartIcon, UserCircleIcon } from "@heroicons/react/24/solid";
 import { useBookingStore } from "@/store/useBookingStore";
 import { useEffect, useState } from "react";
@@ -28,14 +27,9 @@ export default function Navbar() {
       
       getMe()
         .then((res) => {
-          // console.log("3. [Navbar] Response getMe:", res);
-
-          // Cek response sesuai struktur API Laravel/Backend Anda
           if (!res || res.error || res.success === false) {
-            // console.error("4. [Navbar] Gagal validasi user. Melakukan Logout paksa.");
             logout(); 
           } else {
-            // console.log("4. [Navbar] Sukses! Set User ke store.");
             setUser(res.data || res.user || res); 
           }
         })

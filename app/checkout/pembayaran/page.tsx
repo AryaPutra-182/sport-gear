@@ -41,14 +41,12 @@ export default function PembayaranPage() {
     async function fetchAddress() {
       try {
         const res = await getLatestAddress();
-        console.log("📦 Response API Address:", res);
-
+        
         if (res?.status === 401 || res?.error === "Unauthorized") {
           router.push("/login?redirect_to=/checkout/pembayaran");
           return;
         }
 
-        // Normalisasi data (Object atau Array)
         let addressData = res?.data || res;
         if (Array.isArray(addressData)) {
             addressData = addressData.length > 0 ? addressData[0] : null;
@@ -75,18 +73,15 @@ export default function PembayaranPage() {
     setLoading(true);
 
     try {
-      // ✅ FIX PAYLOAD: Gunakan camelCase agar sesuai dengan Prisma Backend
       const payload = {
-        addressId: latestAddress.id, // address_id -> addressId
+        addressId: latestAddress.id,
         items: items.map((item) => ({
-          productId: item.id,        // product_id -> productId
+          productId: item.id,
           quantity: item.quantity,
           duration: item.duration,
         })),
-        totalPrice: totalPembayaran, // total_price -> totalPrice
+        totalPrice: totalPembayaran,
       };
-
-      console.log("📤 Sending Payload:", payload);
 
       const res = await createOrder(payload);
 
@@ -96,7 +91,6 @@ export default function PembayaranPage() {
         return; 
       }
 
-      // Sukses
       clearCart();
       router.push(`/status-pesanan/${res.data?.id || res.id}`);
 
@@ -111,70 +105,68 @@ export default function PembayaranPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen text-white bg-[#0D1117]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mr-3"></div>
-        Memuat data...
+      <div className="flex justify-center items-center min-h-screen bg-[#F7F5E9]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#122D4F]"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0D1117]">
+    // ✅ Background Cream
+    <div className="flex flex-col min-h-screen bg-[#F7F5E9]">
       <Navbar />
 
       <main className="container mx-auto flex-grow px-6 py-12">
-        <h1 className="text-3xl font-bold text-white mb-8">Checkout & Pembayaran</h1>
+        <h1 className="text-3xl font-extrabold text-[#122D4F] mb-8">Checkout & Pembayaran</h1>
 
         <div className="grid lg:grid-cols-3 gap-8 items-start">
           <div className="lg:col-span-2 space-y-6">
 
-            {/* KARTU ALAMAT */}
-            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
+            {/* KARTU ALAMAT (Putih + Shadow) */}
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-white text-xl font-bold">Alamat Pengiriman</h2>
-                <Link href="/checkout/alamat" className="text-teal-400 text-sm hover:underline">
+                <h2 className="text-[#122D4F] text-xl font-bold">Alamat Pengiriman</h2>
+                <Link href="/checkout/alamat" className="text-[#122D4F] text-sm hover:text-[#F4B400] font-medium underline transition-colors">
                   {latestAddress ? "Ubah Alamat" : "Tambah Alamat"}
                 </Link>
               </div>
 
               {latestAddress ? (
-                <div className="text-gray-300 space-y-1">
-                  <p className="font-bold text-white">
-                    {/* Support snake_case atau camelCase */}
+                <div className="text-gray-600 space-y-1">
+                  <p className="font-bold text-[#122D4F] text-lg">
                     {latestAddress.recipientName || latestAddress.recipient_name}
-                    <span className="text-gray-500 ml-2 font-normal"> 
+                    <span className="text-gray-500 ml-2 font-normal text-sm"> 
                         | {latestAddress.phoneNumber || latestAddress.phone_number}
                     </span>
                   </p>
                   <p>{latestAddress.fullAddress || latestAddress.full_address}</p>
                   
                   {latestAddress.notes && (
-                    <p className="text-sm italic text-gray-500">"Catatan: {latestAddress.notes}"</p>
+                    <p className="text-sm italic text-gray-500 mt-2 bg-gray-50 p-2 rounded inline-block">"Catatan: {latestAddress.notes}"</p>
                   )}
                 </div>
               ) : (
-                <div className="text-center py-6 bg-gray-900/50 rounded-md border border-dashed border-gray-600">
-                  <p className="text-yellow-400 mb-3">⚠️ Anda belum mengatur alamat pengiriman</p>
-                  <Link href="/checkout/alamat" className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded">
+                <div className="text-center py-8 bg-[#F7F5E9] rounded-lg border border-dashed border-gray-300">
+                  <p className="text-gray-500 mb-4">⚠️ Anda belum mengatur alamat pengiriman</p>
+                  <Link href="/checkout/alamat" className="bg-[#122D4F] hover:bg-[#0C2E4E] text-white px-6 py-2.5 rounded-lg font-medium transition shadow-md">
                     Tambah Alamat Baru
                   </Link>
                 </div>
               )}
             </div>
 
-            {/* DETAIL BARANG */}
-            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-              <h2 className="text-white text-xl font-bold mb-4">Detail Barang</h2>
+            {/* DETAIL BARANG (Putih + Shadow) */}
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+              <h2 className="text-[#122D4F] text-xl font-bold mb-6">Detail Barang</h2>
 
               {items.map((item) => {
-                // ✅ FIX: Gunakan casting (as any) untuk menghindari error TypeScript
                 const itemPrice = item.price || (item as any).price_per_day || 0;
                 
                 return (
-                  <div key={item.id} className="flex items-center gap-4 border-b border-gray-700 pb-4 last:border-none">
-                    <div className="relative w-16 h-16 bg-gray-700 rounded-md overflow-hidden flex-shrink-0">
+                  <div key={item.id} className="flex items-center gap-6 border-b border-gray-100 pb-6 mb-6 last:border-none last:mb-0 last:pb-0">
+                    <div className="relative w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
                       <Image 
-                        src={item.image || "/placeholder.png"} // Fallback Image
+                        src={item.image || "/placeholder.png"} 
                         alt={item.name} 
                         fill 
                         className="object-cover"
@@ -182,13 +174,13 @@ export default function PembayaranPage() {
                       />
                     </div>
                     <div className="flex-grow">
-                      <p className="text-white font-semibold">{item.name}</p>
-                      <div className="text-sm text-gray-400 flex gap-3 mt-1">
-                        <span className="bg-gray-700 px-2 py-1 rounded text-xs">{item.duration} Hari</span>
-                        <span className="bg-gray-700 px-2 py-1 rounded text-xs">x{item.quantity}</span>
+                      <p className="text-[#122D4F] font-bold text-lg">{item.name}</p>
+                      <div className="text-sm text-gray-500 flex gap-3 mt-2">
+                        <span className="bg-[#F7F5E9] text-[#122D4F] px-3 py-1 rounded-full text-xs font-medium border border-[#122D4F]/10">{item.duration} Hari</span>
+                        <span className="bg-[#F7F5E9] text-[#122D4F] px-3 py-1 rounded-full text-xs font-medium border border-[#122D4F]/10">x{item.quantity}</span>
                       </div>
                     </div>
-                    <p className="text-teal-400 font-medium">
+                    <p className="text-[#122D4F] font-bold text-lg">
                       {formatCurrency(itemPrice * (item.duration || 1) * (item.quantity || 1))}
                     </p>
                   </div>
@@ -197,44 +189,45 @@ export default function PembayaranPage() {
             </div>
           </div>
 
-          {/* SUMMARY PEMBAYARAN */}
-          <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 sticky top-6">
-            <h2 className="text-white text-xl font-bold mb-6">Rincian Pembayaran</h2>
+          {/* SUMMARY PEMBAYARAN (Sticky) */}
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-lg sticky top-24">
+            <h2 className="text-[#122D4F] text-xl font-bold mb-6 border-b border-gray-100 pb-4">Rincian Pembayaran</h2>
 
-            <div className="flex justify-between text-gray-300 mb-2">
+            <div className="flex justify-between text-gray-600 mb-3 font-medium">
               <span>Total Biaya Sewa</span>
               <span>{formatCurrency(totalBiayaSewa)}</span>
             </div>
 
-            <div className="flex justify-between text-gray-300 mb-4">
+            <div className="flex justify-between text-gray-600 mb-6 font-medium">
               <span>Biaya Pengiriman</span>
               <span>{formatCurrency(biayaOngkir)}</span>
             </div>
 
-            <div className="border-t border-gray-700 my-4"></div>
-
-            <div className="flex justify-between text-white text-xl font-bold mb-6">
-              <span>Total Bayar</span>
-              <span className="text-teal-400">{formatCurrency(totalPembayaran)}</span>
+            <div className="border-t border-gray-200 my-4 pt-4">
+                <div className="flex justify-between items-center">
+                    <span className="text-[#122D4F] font-bold text-lg">Total Bayar</span>
+                    <span className="text-[#F4B400] text-2xl font-extrabold">{formatCurrency(totalPembayaran)}</span>
+                </div>
             </div>
 
             <button
               onClick={handleCreateOrder}
-              // Disable jika loading, cart kosong, atau alamat belum ada
               disabled={loading || items.length === 0 || !latestAddress}
-              className={`w-full py-3 font-bold rounded-lg transition ${
+              className={`w-full py-4 font-bold text-lg rounded-xl transition-all shadow-md transform hover:-translate-y-0.5 ${
                 loading || items.length === 0 || !latestAddress
-                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                  : "bg-teal-500 hover:bg-teal-600 text-white shadow-lg shadow-teal-500/20"
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none"
+                  : "bg-[#F4B400] hover:bg-[#e0a500] text-[#122D4F] hover:shadow-lg"
               }`}
             >
               {loading ? "Memproses..." : "Bayar Sekarang"}
             </button>
             
             {!latestAddress && (
-                <p className="text-red-400 text-xs text-center mt-3">
-                    *Mohon isi alamat pengiriman terlebih dahulu
-                </p>
+                <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-lg">
+                    <p className="text-red-500 text-xs text-center font-medium">
+                        *Mohon lengkapi alamat pengiriman terlebih dahulu
+                    </p>
+                </div>
             )}
           </div>
         </div>

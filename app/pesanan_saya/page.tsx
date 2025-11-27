@@ -6,7 +6,6 @@ import Footer from "@/components/Footer";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import ReturnItemButton from "@/components/ReturnItemButton";
 import { fetchOrders } from "@/lib/api"; 
 
 // Interface Types
@@ -42,6 +41,18 @@ export default function PesananSayaPage() {
       minimumFractionDigits: 0,
     }).format(amount);
 
+  // Helper Warna Status
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "selesai": return "bg-green-100 text-green-800 border border-green-200";
+      case "batal": return "bg-red-100 text-red-800 border border-red-200";
+      case "paid": return "bg-blue-100 text-blue-800 border border-blue-200";
+      case "dikemas": return "bg-yellow-100 text-yellow-800 border border-yellow-200";
+      case "dikirim": return "bg-purple-100 text-purple-800 border border-purple-200";
+      default: return "bg-gray-100 text-gray-800 border border-gray-200";
+    }
+  };
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -67,18 +78,6 @@ export default function PesananSayaPage() {
 
     loadData();
   }, [router]);
-
-  // Helper untuk Warna Status
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "selesai": return "bg-green-100 text-green-800 border border-green-200";
-      case "batal": return "bg-red-100 text-red-800 border border-red-200";
-      case "paid": return "bg-blue-100 text-blue-800 border border-blue-200";
-      case "dikemas": return "bg-yellow-100 text-yellow-800 border border-yellow-200";
-      case "dikirim": return "bg-purple-100 text-purple-800 border border-purple-200";
-      default: return "bg-gray-100 text-gray-800 border border-gray-200";
-    }
-  };
 
   return (
     // ✅ Background Cream
@@ -119,50 +118,59 @@ export default function PesananSayaPage() {
                   </div>
                 </div>
 
-                {/* List Items */}
-                <div className="space-y-4">
-                  {order.items.map((item, i) => {
-                    const product = item.product || { name: "Produk tidak tersedia", imageUrl: null, image_url: null, id: 0 };
-                    const imgUrl = product.imageUrl || product.image_url || "/placeholder.png";
+               {/* List Items */}
+                <div className="space-y-4 mb-4">
+                  {order.items.length > 0 ? (
+                    order.items.map((item, i) => {
+                      const productName = item.product?.name || "Produk tidak tersedia";
+                      const productImg = item.product?.imageUrl || item.product?.image_url || "/placeholder.png";
 
-                    return (
-                      <div key={i} className="flex items-center gap-4 bg-[#F9FAFB] p-3 rounded-lg border border-gray-100">
-                        <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200">
-                           <Image
-                              src={imgUrl}
-                              alt={product.name}
-                              fill
-                              className="object-cover"
-                           />
+                      return (
+                        <div key={i} className="flex items-center gap-4 bg-[#F9FAFB] p-3 rounded-lg border border-gray-100">
+                          {/* Gambar Produk */}
+                          <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 bg-white">
+                             <Image
+                                src={productImg}
+                                alt={productName}
+                                fill
+                                className="object-cover"
+                                sizes="100px"
+                             />
+                          </div>
+                          {/* Detail Text */}
+                          <div>
+                            <p className="text-[#122D4F] font-bold text-base">{productName}</p>
+                            <p className="text-gray-500 text-sm mt-1 font-medium">Qty: {item.quantity}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-[#122D4F] font-semibold">{product.name}</p>
-                          <p className="text-gray-500 text-sm mt-1">Qty: {item.quantity}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  ) : (
+                    // ✅ TAMBAHAN: Tampilan jika items kosong (Order #2 akan masuk sini)
+                    <div className="bg-red-50 p-4 rounded-lg border border-red-100 text-center">
+                        <p className="text-red-500 text-sm italic">
+                            ⚠️ Data barang untuk pesanan ini tidak ditemukan.
+                        </p>
+                    </div>
+                  )}
                 </div>
-
-                {/* Action Buttons */}
-                <div className="mt-6 flex justify-end gap-4 items-center pt-4 border-t border-gray-100">
+                {/* Action Buttons (Tanpa Tombol Pengembalian) */}
+                <div className="flex justify-end gap-3 items-center pt-4 border-t border-gray-100">
                   <Link 
                     href={`/status-pesanan/${order.id}`} 
-                    className="text-[#122D4F] font-medium text-sm hover:text-[#F4B400] transition-colors flex items-center gap-1"
+                    className="text-[#122D4F] font-medium text-sm hover:text-[#F4B400] transition-colors flex items-center gap-1 mr-auto sm:mr-0"
                   >
                     Lacak Pesanan &rarr;
                   </Link>
 
-                  {order.status === "selesai" && order.items[0]?.product && (
-                    <>
-                      <Link
-                        href={`/ulasan/${order.items[0].product.id}`}
-                        className="bg-[#122D4F] hover:bg-[#0C2E4E] text-white text-sm font-bold py-2 px-5 rounded-lg transition shadow-md"
-                      >
-                        Beri Ulasan
-                      </Link>
-                      <ReturnItemButton orderId={order.id} />
-                    </>
+                  {/* Tombol Ulasan (Hanya jika Selesai & Produk Ada) */}
+                  {order.status === "selesai" && order.items[0]?.product?.id && (
+                    <Link
+                      href={`/ulasan/${order.items[0].product.id}`}
+                      className="bg-[#122D4F] hover:bg-[#0C2E4E] text-white text-sm font-bold py-2 px-5 rounded-lg transition shadow-md"
+                    >
+                      Beri Ulasan
+                    </Link>
                   )}
                 </div>
               </div>

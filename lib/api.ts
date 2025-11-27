@@ -129,7 +129,7 @@ export function getProductDetail(id: number | string) {
 }
 
 export function getProductsByCategory(category: string) {
-  return request(`/products?category=${category}`);
+  return request(`/products?category=${category}`, { cache: "no-store" });
 }
 
 // KHUSUS FORM DATA (Create Product dengan Gambar)

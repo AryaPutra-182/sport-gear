@@ -2,7 +2,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { redirect, notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import CategoryForm from "@/components/admin/AddCategoryForm";
+// ✅ Use the Reusable Form Component
+import CategoryForm from "@/components/admin/AddCategoryForm"; 
 
 // --- 1. Validasi Admin (Server Side) ---
 async function validateAdmin() {
@@ -32,7 +33,6 @@ async function validateAdmin() {
 }
 
 // --- 2. Fetch Single Category (Server Side) ---
-// Kita buat fungsi fetch manual di sini karena api.ts menggunakan LocalStorage (Client Only)
 async function getCategory(id: string, token: string) {
   try {
     const res = await fetch(`http://localhost:4000/api/categories/${id}`, {
@@ -44,7 +44,7 @@ async function getCategory(id: string, token: string) {
     if (!res.ok) throw new Error("Fetch failed");
 
     const json = await res.json();
-    return json.data || json; // Handle struktur { data: ... } atau langsung object
+    return json.data || json;
   } catch (error) {
     console.error("Error fetch category:", error);
     return null;
@@ -53,34 +53,37 @@ async function getCategory(id: string, token: string) {
 
 // --- PAGE COMPONENT ---
 export default async function EditKategoriPage({ params }: { params: { id: string } }) {
-  // 1. Validasi Admin & Ambil Token
   const token = await validateAdmin();
-
-  // 2. Ambil Data Kategori berdasarkan ID dari URL
   const category = await getCategory(params.id, token);
 
-  // 3. Jika tidak ditemukan, tampilkan halaman 404
   if (!category) {
     notFound();
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0D1117]">
+    // ✅ Background Cream
+    <div className="flex flex-col min-h-screen bg-[#F7F5E9]">
       <Navbar />
 
       <main className="flex-grow container mx-auto px-6 py-12">
-        <div className="max-w-2xl mx-auto bg-gray-800 rounded-lg p-8 border border-gray-700 shadow-lg">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-white text-center flex-grow">
+        
+        {/* Card Container Putih */}
+        <div className="max-w-2xl mx-auto bg-white rounded-xl p-8 border border-gray-200 shadow-lg">
+          
+          {/* Header Form */}
+          <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-4">
+            <h1 className="text-3xl font-extrabold text-[#122D4F]">
                 Edit Kategori
             </h1>
-            <a href="/admin/kategori" className="text-gray-400 hover:text-white text-sm underline">
-                Batal
+            <a 
+                href="/admin/kategori" 
+                className="text-gray-400 hover:text-[#122D4F] text-sm font-medium underline transition-colors"
+            >
+                Batal & Kembali
             </a>
           </div>
 
           {/* Oper data kategori lama ke Form */}
-          {/* Pastikan Anda sudah membuat CategoryForm.tsx di langkah sebelumnya */}
           <CategoryForm initialData={category} />
         </div>
       </main>
