@@ -30,19 +30,19 @@ export default function ProductSearch() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cari raket, bola, sepatu..."
-            className="w-full pl-10 pr-4 py-3 text-white bg-gray-800 border border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="w-full pl-10 pr-4 py-3 text-white bg-[#122D4F] border border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </div>
         <button
           type="submit"
-          className="px-6 py-3 font-semibold text-white bg-gray-700 rounded-full hover:bg-teal-500 transition-colors"
+          className="px-6 py-3 font-semibold text-black bg-[#FFB84D] rounded-full hover:bg-[#30e730] transition-colors"
         >
           Search
         </button>
         <button
           type="button"
           // Logika kategori akan kita tambahkan nanti
-          className="px-6 py-3 font-semibold text-white bg-teal-500 rounded-full hover:bg-teal-600 transition-colors"
+          className="px-6 py-3 font-semibold text-black bg-[#FFB84D] rounded-full hover:bg-[#30e730] transition-colors"
         >
           Category
         </button>

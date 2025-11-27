@@ -52,7 +52,7 @@ export default function AuthButton({ user, onLogout }: AuthButtonProps) {
       {/* Tombol Logout (Panggil fungsi dari props) */}
       <button
         onClick={onLogout}
-        className="flex items-center gap-2 bg-gray-700 hover:bg-red-600 text-white py-2 px-4 rounded-full transition text-sm"
+        className="flex items-center gap-2 bg-white hover:bg-red-600 text-black py-2 px-4 rounded-full transition text-sm"
       >
         <ArrowRightOnRectangleIcon className="h-4 w-4" />
         Logout

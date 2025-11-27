@@ -4,47 +4,51 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-transparent border-t border-gray-800 mt-20">
-      <div className="container mx-auto px-6 py-8">
-        <div className="flex flex-col md:flex-row justify-between text-center md:text-left">
-          {/* Logo & About */}
-          <div className="mb-6 md:mb-0 md:w-1/3">
-            <Link href="/" className="text-2xl font-bold text-white">
-              Sport<span className="text-teal-400">Gear</span>
+    <footer className="bg-[#0C2E4E] text-white mt-20">
+      <div className="container mx-auto px-6 py-10">
+        <div className="flex flex-col md:flex-row justify-between gap-10">
+
+          <div className="md:w-1/3 text-center md:text-left">
+            <Link href="/" className="text-2xl font-semibold">
+              Rentletics
             </Link>
-            <p className="mt-2 text-sm text-gray-400 max-w-xs mx-auto md:mx-0">
-              Kami adalah website penyewaan alat olahraga terlengkap dan terpercaya.
+            <p className="mt-2 text-sm text-gray-300 max-w-xs mx-auto md:mx-0">
+              Platform penyewaan alat olahraga lengkap dan mudah digunakan.
             </p>
           </div>
 
-          {/* Links */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 mb-6 md:mb-0">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-10 text-center md:text-left">
+
             <div>
-              <h3 className="font-semibold text-white mb-3">Tentang Kami</h3>
+              <h3 className="font-semibold mb-3">Tentang</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="#" className="text-gray-400 hover:text-teal-400">Tentang</Link></li>
-                <li><Link href="#" className="text-gray-400 hover:text-teal-400">Karir</Link></li>
+                <li><Link href="#" className="text-gray-300 hover:text-gray-200">Profil</Link></li>
+                <li><Link href="#" className="text-gray-300 hover:text-gray-200">Karir</Link></li>
               </ul>
             </div>
+
             <div>
-              <h3 className="font-semibold text-white mb-3">Contact</h3>
+              <h3 className="font-semibold mb-3">Hubungi</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="#" className="text-gray-400 hover:text-teal-400">Email</Link></li>
-                <li><Link href="#" className="text-gray-400 hover:text-teal-400">Instagram</Link></li>
-                <li><Link href="#" className="text-gray-400 hover:text-teal-400">Twitter</Link></li>
+                <li><Link href="#" className="text-gray-300 hover:text-gray-200">Email</Link></li>
+                <li><Link href="#" className="text-gray-300 hover:text-gray-200">Instagram</Link></li>
+                <li><Link href="#" className="text-gray-300 hover:text-gray-200">Twitter</Link></li>
               </ul>
             </div>
+
             <div>
-              <h3 className="font-semibold text-white mb-3">Legal</h3>
+              <h3 className="font-semibold mb-3">Legal</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="#" className="text-gray-400 hover:text-teal-400">Privacy Policy</Link></li>
-                <li><Link href="#" className="text-gray-400 hover:text-teal-400">Terms of Service</Link></li>
+                <li><Link href="#" className="text-gray-300 hover:text-gray-200">Privacy Policy</Link></li>
+                <li><Link href="#" className="text-gray-300 hover:text-gray-200">Terms & Services</Link></li>
               </ul>
             </div>
+
           </div>
         </div>
-        <div className="mt-8 pt-6 border-t border-gray-800 text-center text-sm text-gray-500">
-          <p>Copyright © {currentYear} SportGear. All rights reserved.</p>
+
+        <div className="mt-10 border-t border-white/20 pt-5 text-center text-sm text-gray-300">
+          © {currentYear} Rentletics — All Rights Reserved.
         </div>
       </div>
     </footer>

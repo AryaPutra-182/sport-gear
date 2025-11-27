@@ -26,12 +26,7 @@ export default function HomePage() {
         });
 
         const result = await res.json();
-
-        if (Array.isArray(result.data)) {
-          setCategories(result.data);
-        } else {
-          setCategories([]);
-        }
+        setCategories(Array.isArray(result.data) ? result.data : []);
       } catch (err) {
         console.error("Failed fetching categories:", err);
         setCategories([]);
@@ -44,7 +39,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0D1117]">
+    <div className="flex flex-col min-h-screen bg-white">
       
       {/* HERO */}
       <header
@@ -55,7 +50,9 @@ export default function HomePage() {
           backgroundPosition: "center",
         }}
       >
-        <div className="absolute inset-0 bg-black/70" />
+        {/* Overlay diganti lebih soft */}
+        <div className="absolute inset-0 bg-white/20 backdrop-blur-sm" />
+
         <div className="relative z-10">
           <Navbar />
         </div>
@@ -63,16 +60,16 @@ export default function HomePage() {
         <div className="relative z-10 flex items-center justify-center md:justify-start h-full">
           <div className="container mx-auto px-6 text-center md:text-left">
             <div className="max-w-xl">
-              <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+              <h1 className="text-4xl md:text-5xl font-bold text-black leading-tight">
                 Let's Rent Sport Equipment
               </h1>
-              <p className="mt-4 text-lg text-gray-300">
-                SportGear memudahkan kamu menyewa alat olahraga tanpa harus membeli.
+              <p className="mt-4 text-lg text-gray-700">
+                Rentletics memudahkan kamu menyewa alat olahraga tanpa harus membeli.
               </p>
 
               <Link
                 href="/register"
-                className="mt-8 inline-block bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-8 rounded-full transition duration-300"
+                className="mt-8 inline-block bg-[#FFB84D] hover:bg-[#FFD580] text-black font-bold py-3 px-8 rounded-full transition duration-300"
               >
                 SIGN UP NOW
               </Link>
@@ -84,21 +81,21 @@ export default function HomePage() {
       {/* MAIN */}
       <main className="container mx-auto px-6 py-20">
         <section>
-          <h2 className="text-3xl font-bold text-white text-center mb-10">
+          <h2 className="text-3xl font-bold text-[#0C2E4E] text-center mb-10">
             Popular Categories
           </h2>
 
           {loading ? (
-            <p className="text-center text-gray-400">Loading categories...</p>
+            <p className="text-center text-gray-500">Loading categories...</p>
           ) : categories.length === 0 ? (
-            <p className="text-center text-gray-400">Tidak ada kategori tersedia.</p>
+            <p className="text-center text-gray-500">Tidak ada kategori tersedia.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
               {categories.map((category) => (
                 <Link
                   key={category.id}
                   href={`/products?category=${category.name}`}
-                  className="group block relative overflow-hidden rounded-lg"
+                  className="group block relative overflow-hidden rounded-lg border border-gray-200 shadow-md"
                 >
                   <Image
                     src={category.image_url}
@@ -107,8 +104,8 @@ export default function HomePage() {
                     height={400}
                     className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <h3 className="text-white text-2xl font-bold">
+                  <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                    <h3 className="text-black text-xl font-semibold">
                       {category.name}
                     </h3>
                   </div>

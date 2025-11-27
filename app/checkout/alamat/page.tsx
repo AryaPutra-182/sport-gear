@@ -27,11 +27,10 @@ export default function AlamatPage() {
     setIsLoading(true);
 
     try {
-      // Payload disesuaikan dengan Schema Prisma (Hanya 4 field utama)
       const payload = {
         recipient_name: recipientName,
         phone_number: phoneNumber,
-        full_address: fullAddress, // User mengetik kota/kodepos di sini saja
+        full_address: fullAddress,
         notes: notes,
       };
 
@@ -53,20 +52,24 @@ export default function AlamatPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0D1117]">
+    // ✅ Background Cream
+    <div className="flex flex-col min-h-screen bg-[#F7F5E9]">
       <Navbar />
 
       <main className="flex-grow container mx-auto px-6 py-12">
-        <div className="max-w-2xl mx-auto bg-gray-800 rounded-lg p-8 border border-gray-700">
-          <h1 className="text-3xl font-bold text-white text-center mb-8">
+        
+        {/* Card Container Putih dengan Shadow */}
+        <div className="max-w-2xl mx-auto bg-white rounded-xl p-8 border border-gray-200 shadow-lg">
+          
+          <h1 className="text-3xl font-extrabold text-[#122D4F] text-center mb-8">
             Detail Alamat Pengiriman
           </h1>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
             
             {/* Nama Penerima */}
             <div>
-              <label className="text-sm font-semibold text-gray-300 mb-2 block">
+              <label className="text-sm font-bold text-[#122D4F] mb-2 block">
                 Nama Lengkap Penerima
               </label>
               <input
@@ -75,13 +78,13 @@ export default function AlamatPage() {
                 placeholder="Contoh: Budi Santoso"
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+                className="w-full px-4 py-3 bg-white text-gray-800 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#122D4F] focus:border-transparent transition shadow-sm placeholder-gray-400"
               />
             </div>
 
             {/* Nomor Telepon */}
             <div>
-              <label className="text-sm font-semibold text-gray-300 mb-2 block">
+              <label className="text-sm font-bold text-[#122D4F] mb-2 block">
                 Nomor Telepon (WhatsApp)
               </label>
               <input
@@ -90,13 +93,13 @@ export default function AlamatPage() {
                 placeholder="Contoh: 081234567890"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+                className="w-full px-4 py-3 bg-white text-gray-800 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#122D4F] focus:border-transparent transition shadow-sm placeholder-gray-400"
               />
             </div>
 
-            {/* Alamat Lengkap (Diperjelas Placeholdernya) */}
+            {/* Alamat Lengkap */}
             <div>
-              <label className="text-sm font-semibold text-gray-300 mb-2 block">
+              <label className="text-sm font-bold text-[#122D4F] mb-2 block">
                 Alamat Lengkap
               </label>
               <textarea
@@ -104,15 +107,15 @@ export default function AlamatPage() {
                 required
                 value={fullAddress}
                 onChange={(e) => setFullAddress(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-teal-500 transition resize-none"
+                className="w-full px-4 py-3 bg-white text-gray-800 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#122D4F] focus:border-transparent transition resize-none shadow-sm placeholder-gray-400"
                 placeholder="Jalan, No. Rumah, RT/RW, Kelurahan, Kecamatan, KOTA, KODE POS..."
               />
-              <p className="text-xs text-gray-500 mt-2">*Mohon tuliskan Kota dan Kode Pos di sini.</p>
+              <p className="text-xs text-gray-500 mt-2 font-medium">*Mohon tuliskan Kota dan Kode Pos di sini.</p>
             </div>
 
             {/* Catatan */}
             <div>
-              <label className="text-sm font-semibold text-gray-300 mb-2 block">
+              <label className="text-sm font-bold text-[#122D4F] mb-2 block">
                 Catatan Kurir (Opsional)
               </label>
               <input
@@ -120,17 +123,17 @@ export default function AlamatPage() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Pagar warna hitam, titip di pos satpam, dll."
-                className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+                className="w-full px-4 py-3 bg-white text-gray-800 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#122D4F] focus:border-transparent transition shadow-sm placeholder-gray-400"
               />
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full font-bold py-3 rounded-lg mt-6 transition-all shadow-lg ${
+              className={`w-full font-bold py-3.5 rounded-lg mt-8 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 ${
                 isLoading 
-                ? "bg-gray-600 text-gray-400 cursor-not-allowed" 
-                : "bg-teal-500 hover:bg-teal-600 text-white shadow-teal-500/20"
+                ? "bg-gray-400 text-gray-200 cursor-not-allowed" 
+                : "bg-[#F4B400] hover:bg-[#e0a500] text-[#122D4F]"
               }`}
             >
               {isLoading ? "Menyimpan Data..." : "Simpan & Lanjut Bayar"}
