@@ -32,7 +32,7 @@ export default function PembayaranPage() {
     return total + (price * duration * quantity);
   }, 0);
 
-  const biayaOngkir = 15000;
+  const biayaOngkir = 10000;
   const totalPembayaran = totalBiayaSewa + biayaOngkir;
 
   useEffect(() => {
@@ -112,7 +112,6 @@ export default function PembayaranPage() {
   }
 
   return (
-    // ✅ Background Cream
     <div className="flex flex-col min-h-screen bg-[#F7F5E9]">
       <Navbar />
 

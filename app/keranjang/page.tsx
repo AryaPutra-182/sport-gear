@@ -40,13 +40,12 @@ export default function KeranjangPage() {
     0
   );
 
-  const biayaOngkir = 15000;
+  const biayaOngkir = 10000;
   const totalPembayaran = totalBiayaSewa + biayaOngkir;
 
   if (!isMounted) return null;
 
   return (
-    // ✅ Background Cream
     <div className="flex flex-col min-h-screen bg-[#F7F5E9]">
       <Navbar />
 
@@ -109,7 +108,7 @@ export default function KeranjangPage() {
               ))}
             </div>
 
-            {/* 📦 Ringkasan */}
+            {/*  Ringkasan */}
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 space-y-4 sticky top-24">
               <h2 className="text-xl font-bold text-[#122D4F] border-b border-gray-200 pb-3">
                 Ringkasan Pesanan
@@ -121,7 +120,7 @@ export default function KeranjangPage() {
               </div>
 
               <div className="flex justify-between text-gray-600 font-medium">
-                <span>Biaya Ongkir (Estimasi)</span>
+                <span>Biaya Ongkir</span>
                 <span>{formatCurrency(biayaOngkir)}</span>
               </div>
 
