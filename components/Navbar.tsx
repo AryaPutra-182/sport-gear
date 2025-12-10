@@ -74,7 +74,7 @@ export default function Navbar() {
         <div className="flex items-center space-x-4">
           
           {/* Tombol Keranjang */}
-          <button onClick={() => handleProtectedRoute("/keranjang")} className="relative flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 text-white py-2 px-4 rounded-full transition-colors">
+          <button onClick={() => handleProtectedRoute("/keranjang")} className="relative flex items-center space-x-2  hover:bg-[#F4B400] text-white py-2 px-4 rounded-full transition-colors">
             <ShoppingCartIcon className="h-5 w-5" />
             {isMounted && items.length > 0 && (
               <span className="absolute -top-2 -right-2 bg-white text-[#122D4F] text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
