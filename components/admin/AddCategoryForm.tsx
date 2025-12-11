@@ -10,22 +10,24 @@ interface Props {
   initialData?: {
     id: number;
     name: string;
-    imageUrl?: string; // CamelCase (Backend Baru)
-    image_url?: string; // SnakeCase (Legacy/Safety)
+    imageUrl?: string;
+    image_url?: string;
   };
 }
 
 export default function CategoryForm({ initialData }: Props) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [name, setName] = useState(initialData?.name || "");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  
-  // Logic: Cek imageUrl dulu, kalau gak ada cek image_url
+
   const [previewImage, setPreviewImage] = useState<string | null>(
     initialData?.imageUrl || initialData?.image_url || null
   );
+
+  // MODAL STATE → khusus edit
+  const [modalOpen, setModalOpen] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -42,9 +44,7 @@ export default function CategoryForm({ initialData }: Props) {
     try {
       const formData = new FormData();
       formData.append("name", name);
-      if (imageFile) {
-        formData.append("image", imageFile);
-      }
+      if (imageFile) formData.append("image", imageFile);
 
       let res;
       if (initialData) {
@@ -54,83 +54,122 @@ export default function CategoryForm({ initialData }: Props) {
       }
 
       if (res.error) {
-        alert(res.error);
+        console.error(res.error);
       } else {
-        alert(initialData ? "Kategori diperbarui!" : "Kategori ditambahkan!");
-        
-        // Reset form jika mode tambah
+        // Tambah kategori → no modal
         if (!initialData) {
-            setName("");
-            setImageFile(null);
-            setPreviewImage(null);
+          setName("");
+          setImageFile(null);
+          setPreviewImage(null);
+          router.refresh();
+          return;
         }
-        
-        router.refresh(); 
+
+        // Edit kategori → tampilkan modal
+        router.refresh();
+        setModalOpen(true);
       }
     } catch (error) {
       console.error(error);
-      alert("Terjadi kesalahan sistem.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const closeModal = () => {
+    setModalOpen(false);
+    router.push("/admin/kategori");
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      
-      {/* Upload Gambar */}
-      <div>
-        <label className="block text-sm font-bold text-[#122D4F] mb-2">Ikon Kategori</label>
-        <div className="flex items-center gap-4">
-          {/* Preview Box */}
-          <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden relative border border-gray-300 flex items-center justify-center flex-shrink-0">
-            {previewImage ? (
-              <Image src={previewImage} alt="Preview" fill className="object-cover" />
-            ) : (
-              <PhotoIcon className="h-8 w-8 text-gray-400" />
-            )}
+    <>
+      {/* FORM – tidak berubah sedikit pun */}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <label className="block text-sm font-bold text-[#122D4F] mb-2">
+            Ikon Kategori
+          </label>
+          <div className="flex items-center gap-4">
+            <div className="relative w-20 h-20 bg-gray-100 rounded-lg overflow-hidden border border-gray-300 flex-shrink-0">
+              {previewImage ? (
+                <Image
+                  src={previewImage}
+                  alt="Preview"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <PhotoIcon className="h-8 w-8 text-gray-400 absolute inset-0 m-auto" />
+              )}
+            </div>
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:text-sm file:font-bold
+                file:bg-[#122D4F] file:text-white
+                hover:file:bg-[#0C2E4E]
+                cursor-pointer"
+            />
           </div>
-          
-          {/* File Input */}
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold text-[#122D4F] mb-2">
+            Nama Kategori
+          </label>
           <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-bold
-              file:bg-[#122D4F] file:text-white
-              hover:file:bg-[#0C2E4E]
-              cursor-pointer"
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-4 py-2.5 bg-white text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#122D4F] focus:border-transparent transition placeholder-gray-400"
+            placeholder="Contoh: Sepatu Lari"
           />
         </div>
-      </div>
 
-      {/* Nama Kategori */}
-      <div>
-        <label className="block text-sm font-bold text-[#122D4F] mb-2">Nama Kategori</label>
-        <input
-          type="text"
-          required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full px-4 py-2.5 bg-white text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#122D4F] focus:border-transparent transition placeholder-gray-400"
-          placeholder="Contoh: Sepatu Lari"
-        />
-      </div>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className={`w-full font-bold py-3 rounded-lg transition-all shadow-md ${
+            isLoading
+              ? "bg-gray-400 text-gray-100 cursor-not-allowed"
+              : "bg-[#122D4F] hover:bg-[#0C2E4E] text-white hover:shadow-lg"
+          }`}
+        >
+          {isLoading
+            ? "Menyimpan..."
+            : initialData
+            ? "Simpan Perubahan"
+            : "Tambah Kategori"}
+        </button>
+      </form>
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className={`w-full font-bold py-3 rounded-lg transition-all shadow-md ${
-            isLoading 
-            ? "bg-gray-400 text-gray-100 cursor-not-allowed" 
-            : "bg-[#122D4F] hover:bg-[#0C2E4E] text-white hover:shadow-lg"
-        }`}
-      >
-        {isLoading ? "Menyimpan..." : initialData ? "Simpan Perubahan" : "Tambah Kategori"}
-      </button>
-    </form>
+      {/* MODAL UNTUK EDIT */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-sm rounded-2xl p-8 shadow-xl border border-gray-200">
+            <h3 className="text-xl font-bold text-[#122D4F] text-center mb-3">
+              Perubahan Disimpan
+            </h3>
+
+            <p className="text-gray-600 text-center mb-6">
+              Kategori berhasil diperbarui.
+            </p>
+
+            <button
+              onClick={closeModal}
+              className="w-full py-3 rounded-lg bg-[#122D4F] text-white font-semibold hover:bg-[#0f223c] transition shadow-md"
+            >
+              Oke
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

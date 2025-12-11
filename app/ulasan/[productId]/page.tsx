@@ -17,30 +17,63 @@ export default function BeriUlasanPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [hoverRating, setHoverRating] = useState(0);
 
+  // Modal state
+  const [modal, setModal] = useState<{
+    open: boolean;
+    msg: string;
+    success: boolean;
+  }>({
+    open: false,
+    msg: "",
+    success: false,
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (rating === 0) {
-      alert("Mohon berikan bintang (1-5).");
+      setModal({
+        open: true,
+        msg: "Mohon berikan bintang minimal 1.",
+        success: false,
+      });
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Kirim ke API (Pastikan submitReview di api.ts sudah benar)
       const res = await submitReview(Number(productId), rating, comment);
 
       if (res.error) {
-        alert(res.error);
+        setModal({
+          open: true,
+          msg: res.error,
+          success: false,
+        });
       } else {
-        alert("Terima kasih! Ulasan Anda berhasil dikirim.");
-        router.push(`/produk/${productId}`); // Balik ke halaman produk
+        setModal({
+          open: true,
+          msg: "Terima kasih! Ulasan Anda berhasil dikirim.",
+          success: true,
+        });
       }
-    } catch (error) {
-      alert("Terjadi kesalahan sistem.");
+    } catch {
+      setModal({
+        open: true,
+        msg: "Terjadi kesalahan sistem.",
+        success: false,
+      });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const closeModal = () => {
+    setModal({ ...modal, open: false });
+
+    if (modal.success) {
+      router.push(`/produk/${productId}`);
     }
   };
 
@@ -58,10 +91,11 @@ export default function BeriUlasanPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            
-            {/* INPUT BINTANG */}
+            {/* RATING */}
             <div className="flex flex-col items-center">
-              <label className="text-sm font-bold text-[#122D4F] mb-3">Rating</label>
+              <label className="text-sm font-bold text-[#122D4F] mb-3">
+                Rating
+              </label>
               <div className="flex gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
@@ -81,11 +115,13 @@ export default function BeriUlasanPage() {
                 ))}
               </div>
               <p className="text-sm text-[#F4B400] font-medium mt-2 h-5">
-                {rating > 0 ? ["Sangat Buruk", "Buruk", "Cukup", "Bagus", "Sangat Bagus"][rating - 1] : ""}
+                {rating > 0
+                  ? ["Sangat Buruk", "Buruk", "Cukup", "Bagus", "Sangat Bagus"][rating - 1]
+                  : ""}
               </p>
             </div>
 
-            {/* INPUT KOMENTAR */}
+            {/* KOMENTAR */}
             <div>
               <label className="block text-sm font-bold text-[#122D4F] mb-2">
                 Komentar Anda
@@ -99,7 +135,7 @@ export default function BeriUlasanPage() {
               />
             </div>
 
-            {/* TOMBOL SUBMIT */}
+            {/* BUTTON SUBMIT */}
             <button
               type="submit"
               disabled={isLoading}
@@ -113,18 +149,37 @@ export default function BeriUlasanPage() {
             </button>
 
             <button
-                type="button"
-                onClick={() => router.back()}
-                className="w-full text-sm text-gray-500 hover:text-[#122D4F] hover:underline"
+              type="button"
+              onClick={() => router.back()}
+              className="w-full text-sm text-gray-500 hover:text-[#122D4F] hover:underline"
             >
-                Batal
+              Batal
             </button>
-
           </form>
         </div>
       </main>
 
       <Footer />
+
+      {/* ================= MODAL ================= */}
+      {modal.open && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-sm rounded-2xl p-8 shadow-xl border border-gray-200">
+            <h3 className="text-xl font-bold text-[#122D4F] text-center mb-3">
+              Informasi
+            </h3>
+
+            <p className="text-gray-600 text-center mb-6">{modal.msg}</p>
+
+            <button
+              onClick={closeModal}
+              className="w-full py-3 rounded-lg bg-[#122D4F] text-white font-semibold hover:bg-[#0f223c] transition shadow-md"
+            >
+              Oke
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
